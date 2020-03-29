@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 
 
 function createWindow () {
@@ -10,6 +10,27 @@ function createWindow () {
       nodeIntegration: true
     }
   })
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    {
+      label: app.getName(),
+      submenu: [
+        {
+          label: 'Save',
+          accelerator: 'CmdOrCtrl+S',
+          click: () => { 
+            win.webContents.send('SAVE_NEEDED'); 
+          }
+        },
+        {
+          label: 'Save all',
+          accelerator: 'CmdOrCtrl+Shift+S',
+          click: () => { 
+            win.webContents.send('SAVE_ALL_NEEDED'); 
+          }
+        }
+      ]
+    }
+  ]))
 
   // and load the index.html of the app.
   win.loadFile('src/index.html')
