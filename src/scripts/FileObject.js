@@ -4,7 +4,7 @@ class FileObject {
 
     constructor(fullFilePath, fileName){
         this.isOpen = true;
-        this.isSaved = false;
+        this.isSaved = true;
         this.fileName = Object(fileName);
         this.fileData = fs.readFileSync(fullFilePath, 'utf8');
         console.log(this.fileData); 
