@@ -3,6 +3,7 @@ class Piece {
         this.bufferIndex = bufferIndex;
         this.start = start;
         this.end = end;
+        this.next = null;
     }
 
 }

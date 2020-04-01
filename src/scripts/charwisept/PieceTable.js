@@ -3,21 +3,23 @@ const fs = require('fs')
 class PieceTable {
     constructor(original){
         this.buffers = [ original ];
-        this.pieces = [ Piece(0, 0, original.length-1) ];
+        this.pieceHead = Piece(0, 0, original.length-1);
+        this.pieceTail = this.pieceHead;
     }
 
     findPiece(charNo){
         if(charNo === 1){
-            return [0, 0, -1];
+            return [this.pieceHead, 0, -1];
         }
         let curChar = 1;
-        for(let i=0;i<this.pieces.length;i++){
-            let length = this.pieces[i].end - this.piece[i].start + 1;
-            if(length + curChar < charNo) {curChar+=length; continue;}
+        let piece = this.pieceHead;
+        while(piece!=null){
+            let length = piece.end - piece.start + 1;
+            if(length + curChar < charNo) {curChar+=length; piece = piece.next; continue;}
             if(length + curChar == charNo){
-                return [i, 2, -1];
+                return [piece, 2, -1];
             }
-            return [i, 1, this.pieces[i].start + (charNo - curChar)]; // index just after the cut
+            return [piece, 1, piece.start + (charNo - curChar)]; // index just after the cut
         }
     }
 
@@ -41,63 +43,44 @@ class PieceTable {
         
     }
 
-    insertAfterPiece(newPiece, indexOfPiece){
-        this.pieces.splice(indexOfPiece+1,0,newPiece);
+    insertAfterPiece(newPiece, piece){
+        newPiece.next = piece.next;
+        piece.next = newPiece;
+        // this.pieces.splice(indexOfPiece+1,0,newPiece);
     }
 
-    insertBeforePiece(newPiece, indexOfPiece){
-        console.log("NAHI AANA CHAHIYE");
-        this.pieces.splice(indexOfPiece,0,newPiece);
+    insertBeforePiece(newPiece, piece){
+        newPiece = this.pieceHead;
+        this.pieceHead = newPiece;
+        // this.pieces.splice(indexOfPiece,0,newPiece);
     }
 
-    insertInBetweenPiece(newPiece, indexOfPieceToSplit, index){
+    insertInBetweenPiece(newPiece, pieceToSplit, index){
         // index ke pehle insert karna hai
-        pieceToSplit = this.pieces[indexOfPieceToSplit];
         rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
-        this.pieces[indexOfPieceToSplit].end = index-1;
-        this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
+        pieceToSplit.end = index-1;
+        this.insertAfterPiece(newPiece, pieceToSplit);
+        this.insertAfterPiece(rightPiece, newPiece);
+        // this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
     }
 
     deleteText(startCharNo, endCharNo){
         if(startCharNo === endCharNo) return;
         let startPieceCoordinate = this.findPiece(startCharNo);
         let endPieceCoordinate = this.findPiece(startCharNo);
-        let pieceIndexToDeleteFrom = -1, pieceIndexToDeleteTo = -1;
-        let leftFullFlag = false, rightFullFlag = false;
-
-        if(startPieceCoordinate[1]==2) {
-            pieceIndexToDeleteFrom = startPieceCoordinate[0]+1;
-            leftFullFlag = true;
-        }
-        else if(startPieceCoordinate[1]==0) {
-            pieceIndexToDeleteFrom = startPieceCoordinate[0];
-            leftFullFlag = true;
-        }
-        else{
-            pieceIndexToDeleteFrom = startPieceCoordinate[0]+1;
-        }
-
-        if(endPieceCoordinate[1]==0) {
-            pieceIndexToDeleteTo = endPieceCoordinate[0]-1;
-            rightFullFlag = true;
-        }
-        else if(endPieceCoordinate[1]==2) {
-            pieceIndexToDeleteTo = endPieceCoordinate[0];
-            rightFullFlag = true;
-        }
-        else{
-            pieceIndexToDeleteTo = endPieceCoordinate[0]-1;
-        }
-
-        if(pieceIndexToDeleteTo - pieceIndexToDeleteFrom + 1 > 0){
-            this.pieces.splice(pieceIndexToDeleteFrom, pieceIndexToDeleteTo - pieceIndexToDeleteFrom + 1);
-        }   
-        if(startPieceCoordinate[1]==1){
-            this.pieces[startPieceCoordinate[0]].end = startPieceCoordinate[2];
-        } 
         
+        if(startPieceCoordinate[1]==0){
+            this.pieceHead = endPieceCoordinate[0];
+        }
+        else{
+            startPieceCoordinate[0].next = endPieceCoordinate[0];
+        }
+
+        if(startPieceCoordinate[1]==1){
+            startPieceCoordinate[0].end = startPieceCoordinate[2];
+        } 
         if(endPieceCoordinate[1]==1){
-            this.pieces[endPieceCoordinate[0]].start = endPieceCoordinate[2];
+            endPieceCoordinate[0].start = endPieceCoordinate[2];
         } 
     }
 
