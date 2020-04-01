@@ -2,30 +2,29 @@ const fs = require('fs')
 
 class PieceTable {
     constructor(original){
-        this.buffers = [ BufferT(original) ];
+        this.buffers = [ original ];
         this.pieces = [ Piece(0, 0, original.length-1) ];
     }
 
-    findPiece(lineNo, colNo){
-        let curLine = 1;
+    findPiece(charNo){
+        if(charNo === 1){
+            return [0, 0, -1];
+        }
+        let curChar = 1;
         for(let i=0;i<this.pieces.length;i++){
-            let noOfNewLines = countNewLines(this.pieces[i]);
-            if(noOfNewLines + curLine < lineNo) continue;
-            let indexOfNL = this.buffers[this.pieces[i].bufferIndex].getIndexOfNewLine(this.pieces[i].start, reqLine-curLine);
-            if(this.pieces[i].end  == indexOfNL + reqCol-1){
+            let length = this.pieces[i].end - this.piece[i].start + 1;
+            if(length + curChar < charNo) {curChar+=length; continue;}
+            if(length + curChar == charNo){
                 return [i, 2, -1];
             }
-            if(indexOfNL + reqCol == 0){
-                return [i, 0, -1];
-            }
-            return [i, 1, indexOfNL + reqCol];
+            return [i, 1, this.pieces[i].start + (charNo - curChar)]; // index just after the cut
         }
     }
 
-    addText(text, lineNo, colNo){
+    addText(text, charNo){
         let newPiece = new Piece(buffer.length, 0, text.length-1);
-        this.buffers.push(BufferT(text));
-        let pieceCoordinate = this.findPiece(lineNo, colNo);
+        this.buffers.push(text);
+        let pieceCoordinate = this.findPiece(charNo);
         switch (pieceCoordinate[1]) {
             case 0:
                 insertBeforePiece(newPiece, pieceCoordinate[0]);
@@ -42,10 +41,6 @@ class PieceTable {
         
     }
 
-    countNewLines(piece){
-        return this.buffers[piece.bufferIndex].countNewLines(piece.start, piece.end);
-    }
-
     insertAfterPiece(newPiece, indexOfPiece){
         this.pieces.splice(indexOfPiece+1,0,newPiece);
     }
@@ -60,14 +55,13 @@ class PieceTable {
         pieceToSplit = this.pieces[indexOfPieceToSplit];
         rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
         this.pieces[indexOfPieceToSplit].end = index-1;
-        this.pieces.splice(indexOfPieceToSplit+1, 0, newPiece);
-        this.pieces.splice(indexOfPieceToSplit+2, 0, rightPiece);
+        this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
     }
 
-    deleteText(startLineNo, startColNo, endLineNo, endColNo){
-        if(startLineNo === endLineNo && startColNo === endColNo) return;
-        let startPieceCoordinate = this.findPiece(startLineNo, startColNo);
-        let endPieceCoordinate = this.findPiece(endLineNo, endColNo);
+    deleteText(startCharNo, endCharNo){
+        if(startCharNo === endCharNo) return;
+        let startPieceCoordinate = this.findPiece(startCharNo);
+        let endPieceCoordinate = this.findPiece(startCharNo);
         let pieceIndexToDeleteFrom = -1, pieceIndexToDeleteTo = -1;
         let leftFullFlag = false, rightFullFlag = false;
 
