@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +8,18 @@
   <title>Hello World!</title>
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body class="index">
-  <div class="container">
   <ul id="titles"></ul>
-  <div id="content" contenteditable="true">
+  <!-- <div class="container"> -->
+         <!-- <span> -->
+    <div id="rowcnt" readonly></div>
+    <textarea id="content">
         <p>Select a title <br />  &#x2190</p>
-    </div>
-  </div>
-   <!-- <button onclick="open_()">Open</button>
+  </textarea>
+  <!-- </span> -->
+  <!-- </div> -->
+  <!-- <button onclick="open_()">Open</button>
   <p contenteditable="true"></p>
   <button onclick="close_()">Close</button>
   <button onclick="read_()">Read</button>
@@ -22,4 +27,5 @@
   <script src="scripts/FileObject.js"></script>
   <script src="scripts/index.js"></script>
 </body>
+
 </html>
