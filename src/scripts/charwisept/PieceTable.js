@@ -1,9 +1,10 @@
-const fs = require('fs')
+const Piece = require('C:\\Users\\PRANAV\\Documents\\electron_tuts\\textEditor\\src\\scripts\\charwisept\\Piece.js').Piece;
+const PieceRange = require('C:\\Users\\PRANAV\\Documents\\electron_tuts\\textEditor\\src\\scripts\\charwisept\\Piece.js').PieceRange
 
 class PieceTable {
     constructor(original){
         this.buffers = [ original ];
-        this.pieceHead = Piece(0, 0, original.length-1);
+        this.pieceHead = new Piece(0, 0, original.length-1);
         this.pieceTail = this.pieceHead;
         this.undoStack = new Array();
         this.redoStack = new Array();
@@ -30,18 +31,19 @@ class PieceTable {
     }
 
     addText(text, charNo){
-        let newPiece = new Piece(buffer.length, 0, text.length-1);
+        console.log(text.length, charNo);
+        let newPiece = new Piece(this.buffers.length, 0, text.length - 1);
         this.buffers.push(text);
         let pieceCoordinate = this.findPiece(charNo);
         switch (pieceCoordinate[1]) {
             case 0:
-                insertBeforePiece(newPiece, pieceCoordinate[0]);
+                this.insertBeforePiece(newPiece, pieceCoordinate[0]);
                 break;
             case 1:
-                insertInBetweenPiece(newPiece, pieceCoordinate[0], pieceCoordinate[2]);
+                this.insertInBetweenPiece(newPiece, pieceCoordinate[0], pieceCoordinate[2]);
                 break;
             case 2:
-                insertAfterPiece(newPiece, pieceCoordinate[0]);
+                this.insertAfterPiece(newPiece, pieceCoordinate[0]);
                 break;
             default:
                 break;
@@ -123,9 +125,12 @@ class PieceTable {
     // }
 
     deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo] inclusive delete 
+        console.log(startCharNo, endCharNo);
         if(startCharNo > endCharNo) return;
         let startPieceCoordinate = this.findPiece(startCharNo);
-        let endPieceCoordinate = this.findPiece(startCharNo);  
+        let endPieceCoordinate = this.findPiece(endCharNo);  
+        console.log(startPieceCoordinate[0],startPieceCoordinate[1],startPieceCoordinate[2]);
+        console.log(endPieceCoordinate[0],endPieceCoordinate[1],endPieceCoordinate[2]);
         let piece = startPieceCoordinate[0];
         let startPiece = startPieceCoordinate[0], endPiece = endPieceCoordinate[0];
         if(startPieceCoordinate[1]===0){
@@ -133,6 +138,9 @@ class PieceTable {
         }
         else if(startPieceCoordinate[1]===1){
             startPiece = new Piece(piece.bufferIndex, piece.start, startPieceCoordinate[2]-1, piece.prev, null);
+            if(startPiece.prev) startPiece.prev.next = startPiece;
+            else this.pieceHead = startPiece;
+
         }
         else if(startPieceCoordinate[1]===2) {
             piece=piece.next;
@@ -143,33 +151,42 @@ class PieceTable {
             piece = piece.next;
         } 
         if(endPieceCoordinate[1]===1){
-            endPiece = new Piece(endPieceCoordinate[0].bufferIndex, endPieceCoordinate[2]+1, endPieceCoordinate[0], null, endPieceCoordinate[0].next);
+            
+            endPiece = new Piece(endPieceCoordinate[0].bufferIndex, endPieceCoordinate[2]+1, endPieceCoordinate[0].end, null, endPieceCoordinate[0].next);
+            if(endPiece.next) endPiece.next.prev = endPiece;
+            else this.pieceTail = endPiece;
         }
         else if(endPieceCoordinate[1]===2){
             endPiece = endPiece.next;
         }
         let pieceRange = new PieceRange(piece, endPieceCoordinate[0], 0);
         if(startPiece) startPiece.next = endPiece;
-        if(endPiece) endPiece.prev = startPiece;      
+        else{
+            this.pieceHead = endPiece;
+        }
+        if(endPiece) endPiece.prev = startPiece;  
+        else{
+            this.pieceTail = startPiece;
+        }    
         this.pushUndo(pieceRange);
     }
 
-    constructFinalDocument(){
-        let fileDescriptor = fd;
-        fs.open("mynewfile1.txt", "w", function(err, fd){
-            if(err) console.log(err);
-            console.log("File opened")
-        });
-        let posInFile=0;
-        let piece = this.pieceHead;
-        while(piece){
-            let length = piece.end - piece.start + 1;
-            fs.write(Buffer(this.buffers[piece.bufferIndex]), piece.start, length, posInFile);
-            posInFile+=length;
-            piece = piece.next;
-        }
-        fs.close(fd);
-    }
+    // constructFinalDocument(){
+    //     let fileDescriptor = fd;
+    //     fs.open("mynewfile1.txt", "w", function(err, fd){
+    //         if(err) console.log(err);
+    //         console.log("File opened")
+    //     });
+    //     let posInFile=0;
+    //     let piece = this.pieceHead;
+    //     while(piece){
+    //         let length = piece.end - piece.start + 1;
+    //         fs.write(Buffer(this.buffers[piece.bufferIndex]), piece.start, length, posInFile);
+    //         posInFile+=length;
+    //         piece = piece.next;
+    //     }
+    //     fs.close(fd);
+    // }
 
     
     applyUndoRedo(lastEdit){

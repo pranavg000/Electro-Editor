@@ -52,11 +52,16 @@ function addpiece() {
     if (inptype.match(/insert/)) {
         var reqstring = piecestring.join('');
         addpiecestart;
+        console.log(reqstring);
+        curObj.pieceTable.addText(reqstring, addpiecestart+1);
+        console.log(curObj.pieceTable);
         lenofpiece;
+        piecestring = [];
     }
     else if (inptype.match(/delete/)) {
         addpiecestart;
         lenofpiece;
+        curObj.pieceTable.deleteText(addpiecestart + 1, addpiecestart + lenofpiece);
     }
 
 }
@@ -146,7 +151,8 @@ mainContent.addEventListener('keydown', function (e) {
 
         }
         else {
-            addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd) - 1;
+            addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
+            lenofpiece--;
             addpiece();
             lenofpiece = 0;
             addpiecestart = -10;
@@ -177,7 +183,7 @@ mainContent.addEventListener('input', function (e) {
         }
 
 
-        console.log(e);
+        // console.log(e);
         console.log(mainContent.value[mainContent.selectionStart - 1]);
         if (curObj.isSaved) {
             // console.log("Unsaved");
@@ -200,11 +206,8 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
         titleofcurobj.innerHTML = newtitle;
         console.log(newtitle);
     }
-    save_(curObj);
-})
-
-ipcRenderer.on('SAVE_ALL_NEEDED', function (event, arg) {
-
+    addpiece();
+    curObj.saveTheFile();
 })
 
 function save_(currentFileObject) {

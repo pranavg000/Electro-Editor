@@ -18,19 +18,7 @@ class PieceRange {
     }
 }
 
-
-// class UndoStack{
-//     constructor(historyLength){
-//         this.historyLength = historyLength;
-//         this.stack = new Array();
-//     }
-
-//     pop(){
-//         if(!this.stack.length) return false;
-
-//     }
-
-//     push(pieceRange){
-//         stack.push(pieceRange);
-//     }
-// }
+module.exports = {
+    PieceRange : PieceRange,
+    Piece : Piece
+  }
