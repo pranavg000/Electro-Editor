@@ -5,6 +5,8 @@ class PieceTable {
         this.buffers = [ original ];
         this.pieceHead = Piece(0, 0, original.length-1);
         this.pieceTail = this.pieceHead;
+        this.undoStack = new Array();
+        this.redoStack = new Array();
     }
 
     findPiece(charNo){
@@ -15,7 +17,11 @@ class PieceTable {
         let piece = this.pieceHead;
         while(piece!=null){
             let length = piece.end - piece.start + 1;
-            if(length + curChar < charNo) {curChar+=length; piece = piece.next; continue;}
+            if(length + curChar < charNo) {
+                curChar+=length; 
+                piece = piece.next; 
+                continue;
+            }
             if(length + curChar == charNo){
                 return [piece, 2, -1];
             }
@@ -45,19 +51,27 @@ class PieceTable {
 
     insertAfterPiece(newPiece, piece){
         newPiece.next = piece.next;
+        if(newPiece.next) newPiece.next.prev = newPiece;
+        else this.pieceTail = newPiece;
         piece.next = newPiece;
+        newPiece.prev = piece;
+        this.pushUndo(new PieceRange(piece, newPiece.next, 1));
         // this.pieces.splice(indexOfPiece+1,0,newPiece);
     }
 
     insertBeforePiece(newPiece, piece){
-        newPiece = this.pieceHead;
+        newPiece.next = this.pieceHead;
         this.pieceHead = newPiece;
+        piece.prev = newPiece;
+        this.pushUndo(new PieceRange(null, piece, 1));
         // this.pieces.splice(indexOfPiece,0,newPiece);
     }
 
     insertInBetweenPiece(newPiece, pieceToSplit, index){
         // index ke pehle insert karna hai
-        rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
+        let rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end, pieceToSplit.prev, pieceToSplit.next);
+        let pieceCopy = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
+        this.pushUndo(new PieceRange(pieceCopy, pieceCopy, 0));
         pieceToSplit.end = index-1;
         this.insertAfterPiece(newPiece, pieceToSplit);
         this.insertAfterPiece(rightPiece, newPiece);
@@ -68,16 +82,38 @@ class PieceTable {
         if(startCharNo === endCharNo) return;
         let startPieceCoordinate = this.findPiece(startCharNo);
         let endPieceCoordinate = this.findPiece(startCharNo);
-        
-        if(startPieceCoordinate[1]==0){
+        if(startPieceCoordinate[0] === endPieceCoordinate[0]){
+            let piece = endPieceCoordinate[0];
+            if(startPieceCoordinate[1]===0){
+                if(endPieceCoordinate[1]===2){
+                    this.pieceHead = piece.next;
+                    if(piece.next) piece.next.prev = null;
+                    return;
+                }
+                piece.start = endPieceCoordinate[2]+1;
+                return;
+            }
+            if(endPieceCoordinate[1]===2){
+                piece.end = startPieceCoordinate[2]-1;
+                return;
+            }
+            let newPiece = new Piece(piece.bufferIndex, endPieceCoordinate[2]+1, piece.end, piece, piece.next);
+            piece.end = startPieceCoordinate[2]-1;
+            this.insertAfterPiece(newPiece, piece);
+            piece.start = endPieceCoordinate[2]+1;
+            return;
+        }
+        if(startPieceCoordinate[1]===0){
             this.pieceHead = endPieceCoordinate[0];
+            endPieceCoordinate[0].prev = null;
         }
         else{
             startPieceCoordinate[0].next = endPieceCoordinate[0];
+            endPieceCoordinate[0].prev = startPieceCoordinate[0];
         }
 
         if(startPieceCoordinate[1]==1){
-            startPieceCoordinate[0].end = startPieceCoordinate[2];
+            startPieceCoordinate[0].end = startPieceCoordinate[2]-1;
         } 
         if(endPieceCoordinate[1]==1){
             endPieceCoordinate[0].start = endPieceCoordinate[2];
@@ -91,13 +127,104 @@ class PieceTable {
             console.log("File opened")
         });
         let posInFile=0;
-        for(let piece in this.pieces){
+        let piece = this.pieceHead;
+        while(piece){
             let length = piece.end - piece.start + 1;
             fs.write(Buffer(this.buffers[piece.bufferIndex]), piece.start, length, posInFile);
             posInFile+=length;
+            piece = piece.next;
         }
         fs.close(fd);
     }
+
+    
+    applyUndoRedo(lastEdit){
+        let newRange = new PieceRange();
+        if(!lastEdit.piceRangeType){
+            let prevPiece = lastEdit.first.prev;
+            let nextPiece = lastEdit.last.next;
+            if(prevPiece){
+                newRange.first = prevPiece.next;
+                prevPiece.next = lastEdit.first;
+            }
+            else{
+                newRange.first = this.pieceHead;
+                this.pieceHead = lastEdit.first;
+            }
+
+            if(nextPiece){
+                newRange.last = nextPiece.prev;
+                nextPiece.prev = lastEdit.last;
+            }
+            else{
+                newRange.last = this.pieceTail;
+                this.pieceTail = lastEdit.last;
+            }
+            
+        }
+        else{
+            if(lastEdit.first){
+                newRange.first = lastEdit.first.next;
+                lastEdit.first.next = lastEdit.last;
+            }
+            else{
+                newRange.first = this.pieceHead;
+                this.pieceHead = lastEdit.last;
+            }
+
+            if(lastEdit.last){
+                newRange.last = lastEdit.last.prev;
+                lastEdit.last.prev = lastEdit.first;
+            }
+            else{
+                newRange.last = this.pieceTail;
+                this.pieceTail = lastEdit.first;
+            }
+        }
+        return newRange;
+        
+    }
+    applyUndo(){
+        if(!this.undoStack.length) {
+            console.log("Empty Undo Stack");
+            return false;
+        }
+        let lastEdit = this.undoStack[this.undoStack.length-1];
+        let newRange = applyUndoRedo(lastEdit);
+        this.popUndo();
+        this.pushRedo(newRange);
+    }
+
+    applyRedo(){
+        if(!this.redoStack.length) {
+            console.log("Empty Redo Stack");
+            return false;
+        }
+        let lastEdit = this.redoStack[this.redoStack.length-1];
+        let newRange = applyUndoRedo(lastEdit);
+        this.popRedo();
+        this.pushUndo(newRange);
+    }
+
+    popUndo(){
+        if(!this.undoStack.length) this.undoStack.pop();
+    }
+
+    popRedo(){
+        if(!this.redoStack.length) this.redoStack.pop();
+    }
+
+    pushUndo(pieceRange){
+        if(this.undoStack.length==10) this.undoStack.shift();
+        this.undoStack.push(pieceRange);
+        console.log(this.undoStack.length);
+    }
+    pushRedo(pieceRange){
+        if(this.redoStack.length==10) this.redoStack.shift();
+        this.redoStack.push(pieceRange);
+        console.log(this.redoStack.length);
+    }
+
 
 
 }
