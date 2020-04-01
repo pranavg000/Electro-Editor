@@ -32,13 +32,14 @@ class FileObject {
                 fileDescriptor = fd
                 console.log("File opened")
                 let posInFile=0;
-                let fullText = [];
+                // let fullText = [];
                 console.log(this_, this_.pieceTable);
                 let piece = this_.pieceTable.pieceHead;
                 while(piece){
-                    for(let i=piece.start;i<=piece.end;i++){
-                        fullText.push(this_.pieceTable.buffers[piece.bufferIndex][i]);
-                    }
+                    // console.log(piece);
+                    // for(let i=piece.start;i<=piece.end;i++){
+                    //     fullText.push(this_.pieceTable.buffers[piece.bufferIndex][i]);
+                    // }
                     let length = piece.end - piece.start + 1;
                     fs.writeSync(fileDescriptor, Buffer(this_.pieceTable.buffers[piece.bufferIndex]), piece.start, length, posInFile);
                     posInFile+=length;
@@ -47,8 +48,8 @@ class FileObject {
                 fs.close(fileDescriptor, function(err){
                     if(err) console.log(err);
                     console.log("Written in File")
-                    console.log(fullText.join(''))
-                    this_.pieceTable = new PieceTable(fullText.join(''));
+                    // console.log(fullText.join(''))
+                    // this_.pieceTable = new PieceTable(fullText.join(''));
                 });
             });
             

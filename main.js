@@ -27,7 +27,14 @@ function createWindow () {
           click: () => { 
             win.webContents.send('SAVE_ALL_NEEDED'); 
           }
-        }
+        },
+        {
+          label: 'Undo',
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => { 
+            win.webContents.send('UNDO_NEEDED'); 
+          }
+        },
       ]
     }
   ]))

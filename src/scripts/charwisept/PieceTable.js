@@ -35,6 +35,7 @@ class PieceTable {
         let newPiece = new Piece(this.buffers.length, 0, text.length - 1);
         this.buffers.push(text);
         let pieceCoordinate = this.findPiece(charNo);
+        console.log(charNo, pieceCoordinate);
         switch (pieceCoordinate[1]) {
             case 0:
                 this.insertBeforePiece(newPiece, pieceCoordinate[0]);
@@ -52,6 +53,7 @@ class PieceTable {
     }
 
     insertAfterPiece(newPiece, piece){
+        
         newPiece.next = piece.next;
         if(newPiece.next) newPiece.next.prev = newPiece;
         else this.pieceTail = newPiece;
@@ -152,7 +154,7 @@ class PieceTable {
         } 
         if(endPieceCoordinate[1]===1){
             
-            endPiece = new Piece(endPieceCoordinate[0].bufferIndex, endPieceCoordinate[2]+1, endPieceCoordinate[0].end, null, endPieceCoordinate[0].next);
+            endPiece = new Piece(endPieceCoordinate[0].bufferIndex, endPieceCoordinate[2], endPieceCoordinate[0].end, null, endPieceCoordinate[0].next);
             if(endPiece.next) endPiece.next.prev = endPiece;
             else this.pieceTail = endPiece;
         }
@@ -190,8 +192,9 @@ class PieceTable {
 
     
     applyUndoRedo(lastEdit){
+        console.log("#");
         let newRange = new PieceRange();
-        if(!lastEdit.piceRangeType){
+        if(!lastEdit.pieceRangeType){
             let prevPiece = lastEdit.first.prev;
             let nextPiece = lastEdit.last.next;
             if(prevPiece){
@@ -214,6 +217,7 @@ class PieceTable {
             
         }
         else{
+            console.log(lastEdit);
             if(lastEdit.first){
                 newRange.first = lastEdit.first.next;
                 lastEdit.first.next = lastEdit.last;
@@ -236,12 +240,13 @@ class PieceTable {
         
     }
     applyUndo(){
+        console.log("#w");
         if(!this.undoStack.length) {
             console.log("Empty Undo Stack");
             return false;
         }
         let lastEdit = this.undoStack[this.undoStack.length-1];
-        let newRange = applyUndoRedo(lastEdit);
+        let newRange = this.applyUndoRedo(lastEdit);
         this.popUndo();
         this.pushRedo(newRange);
     }
@@ -252,17 +257,17 @@ class PieceTable {
             return false;
         }
         let lastEdit = this.redoStack[this.redoStack.length-1];
-        let newRange = applyUndoRedo(lastEdit);
+        let newRange = this.applyUndoRedo(lastEdit);
         this.popRedo();
         this.pushUndo(newRange);
     }
 
     popUndo(){
-        if(!this.undoStack.length) this.undoStack.pop();
+        if(this.undoStack.length) this.undoStack.pop();
     }
 
     popRedo(){
-        if(!this.redoStack.length) this.redoStack.pop();
+        if(this.redoStack.length) this.redoStack.pop();
     }
 
     pushUndo(pieceRange){

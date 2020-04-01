@@ -54,6 +54,7 @@ function addpiece() {
         addpiecestart;
         console.log(reqstring);
         curObj.pieceTable.addText(reqstring, addpiecestart+1);
+        console.log(curObj.pieceTable.undoStack);
         console.log(curObj.pieceTable);
         lenofpiece;
         piecestring = [];
@@ -61,7 +62,8 @@ function addpiece() {
     else if (inptype.match(/delete/)) {
         addpiecestart;
         lenofpiece;
-        curObj.pieceTable.deleteText(addpiecestart + 1, addpiecestart + lenofpiece);
+        curObj.pieceTable.deleteText(addpiecestart + 1, addpiecestart + lenofpiece+1);
+        console.log(curObj.pieceTable.undoStack);
     }
 
 }
@@ -207,7 +209,17 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
         console.log(newtitle);
     }
     addpiece();
+    piecestring = [];
+    lenofpiece = 0;
+    addpiecestart = -10;
+    inptype = "";
     curObj.saveTheFile();
+})
+
+ipcRenderer.on('UNDO_NEEDED', function (event, arg) {
+    if(curObj){
+        curObj.pieceTable.applyUndo();
+    }
 })
 
 function save_(currentFileObject) {
