@@ -69,8 +69,8 @@ class PieceTable {
 
     insertInBetweenPiece(newPiece, pieceToSplit, index){
         // index ke pehle insert karna hai
-        let rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end, pieceToSplit.prev, pieceToSplit.next);
-        let pieceCopy = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
+        let rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
+        let pieceCopy = this.clone(pieceToSplit);
         this.pushUndo(new PieceRange(pieceCopy, pieceCopy, 0));
         pieceToSplit.end = index-1;
         this.insertAfterPiece(newPiece, pieceToSplit);
@@ -78,46 +78,80 @@ class PieceTable {
         // this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
     }
 
-    deleteText(startCharNo, endCharNo){
-        if(startCharNo === endCharNo) return;
-        let startPieceCoordinate = this.findPiece(startCharNo);
-        let endPieceCoordinate = this.findPiece(startCharNo);
-        if(startPieceCoordinate[0] === endPieceCoordinate[0]){
-            let piece = endPieceCoordinate[0];
-            if(startPieceCoordinate[1]===0){
-                if(endPieceCoordinate[1]===2){
-                    this.pieceHead = piece.next;
-                    if(piece.next) piece.next.prev = null;
-                    return;
-                }
-                piece.start = endPieceCoordinate[2]+1;
-                return;
-            }
-            if(endPieceCoordinate[1]===2){
-                piece.end = startPieceCoordinate[2]-1;
-                return;
-            }
-            let newPiece = new Piece(piece.bufferIndex, endPieceCoordinate[2]+1, piece.end, piece, piece.next);
-            piece.end = startPieceCoordinate[2]-1;
-            this.insertAfterPiece(newPiece, piece);
-            piece.start = endPieceCoordinate[2]+1;
-            return;
-        }
-        if(startPieceCoordinate[1]===0){
-            this.pieceHead = endPieceCoordinate[0];
-            endPieceCoordinate[0].prev = null;
-        }
-        else{
-            startPieceCoordinate[0].next = endPieceCoordinate[0];
-            endPieceCoordinate[0].prev = startPieceCoordinate[0];
-        }
+    // deleteText(startCharNo, endCharNo){
+    //     if(startCharNo === endCharNo) return;
+    //     let startPieceCoordinate = this.findPiece(startCharNo);
+    //     let endPieceCoordinate = this.findPiece(startCharNo);   
+    //     if(startPieceCoordinate[0] === endPieceCoordinate[0]){ 
+    //         let piece = endPieceCoordinate[0];
+    //         let pieceCopy = clone(piece);
+    //         this.pushUndo(new PieceRange(pieceCopy, pieceCopy, 0));
+    //         if(startPieceCoordinate[1]===0){
+    //             if(endPieceCoordinate[1]===2){
+    //                 this.pieceHead = piece.next;
+    //                 if(piece.next) piece.next.prev = null;
+    //                 return;
+    //             }
+    //             piece.start = endPieceCoordinate[2]+1;
+    //             return;
+    //         }  
+    //         if(endPieceCoordinate[1]===2){
+    //             piece.end = startPieceCoordinate[2]-1;
+    //             return;
+    //         }            
+    //         let newPiece = new Piece(piece.bufferIndex, endPieceCoordinate[2]+1, piece.end, piece, piece.next);
+    //         piece.end = startPieceCoordinate[2]-1;
+    //         this.insertAfterPiece(newPiece, piece);
+    //         piece.start = endPieceCoordinate[2]+1;
+    //         return;
+    //     }
+    //     if(startPieceCoordinate[1]===0){
+    //         this.pieceHead = endPieceCoordinate[0];
+    //         endPieceCoordinate[0].prev = null;
+    //     }
+    //     else{
+    //         startPieceCoordinate[0].next = endPieceCoordinate[0];
+    //         endPieceCoordinate[0].prev = startPieceCoordinate[0];
+    //     }
 
-        if(startPieceCoordinate[1]==1){
-            startPieceCoordinate[0].end = startPieceCoordinate[2]-1;
+    //     if(startPieceCoordinate[1]==1){
+    //         startPieceCoordinate[0].end = startPieceCoordinate[2]-1;
+    //     } 
+    //     if(endPieceCoordinate[1]==1){
+    //         endPieceCoordinate[0].start = endPieceCoordinate[2];
+    //     } 
+    // }
+
+    deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo] inclusive delete 
+        if(startCharNo > endCharNo) return;
+        let startPieceCoordinate = this.findPiece(startCharNo);
+        let endPieceCoordinate = this.findPiece(startCharNo);  
+        let piece = startPieceCoordinate[0];
+        let startPiece = startPieceCoordinate[0], endPiece = endPieceCoordinate[0];
+        if(startPieceCoordinate[1]===0){
+            startPiece = startPiece.prev;
+        }
+        else if(startPieceCoordinate[1]===1){
+            startPiece = new Piece(piece.bufferIndex, piece.start, startPieceCoordinate[2]-1, piece.prev, null);
+        }
+        else if(startPieceCoordinate[1]===2) {
+            piece=piece.next;
+            startPiece = startPiece.next;
+        }
+        
+        while(piece != endPieceCoordinate[0] && piece!=null){
+            piece = piece.next;
         } 
-        if(endPieceCoordinate[1]==1){
-            endPieceCoordinate[0].start = endPieceCoordinate[2];
-        } 
+        if(endPieceCoordinate[1]===1){
+            endPiece = new Piece(endPieceCoordinate[0].bufferIndex, endPieceCoordinate[2]+1, endPieceCoordinate[0], null, endPieceCoordinate[0].next);
+        }
+        else if(endPieceCoordinate[1]===2){
+            endPiece = endPiece.next;
+        }
+        let pieceRange = new PieceRange(piece, endPieceCoordinate[0], 0);
+        if(startPiece) startPiece.next = endPiece;
+        if(endPiece) endPiece.prev = startPiece;      
+        this.pushUndo(pieceRange);
     }
 
     constructFinalDocument(){
@@ -223,6 +257,10 @@ class PieceTable {
         if(this.redoStack.length==10) this.redoStack.shift();
         this.redoStack.push(pieceRange);
         console.log(this.redoStack.length);
+    }
+
+    clone(piece){
+        return new Piece(piece.bufferIndex, piece.start, piece.end, piece.prev, piece.next);
     }
 
 
