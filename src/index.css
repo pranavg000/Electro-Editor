@@ -70,45 +70,115 @@
   
 
 
-  #rowcnt{
+  .rowcnt{
     width: 2%;
     outline: none;
     border: 0em;
     /* white-space: nowrap; */
     height: 100%;
-    position: fixed;
-    left: 20%;
+    position: relative;
+    display: inline-block;
+    /* left: 20%; */
     resize: none;
-    scroll-behavior: auto;
-    /* border: none; */
+    border: none;
     padding-right: 2px;
     padding-top: 10px;
+    padding-bottom: 14px;
     font-size: 1.5rem;
     line-height: 2.5rem;
-    /* overflow-y: hidden;  */
+    /* overflow-y:hidden; */
+    overflow:hidden;
+    scroll-behavior: auto;
     background-color: rgb(105,105,105); 
     color: white; 
     text-align: right; 
     vertical-align:top
   }
-  #content {
+  .content {
 
-    width: 78%;
+    width: 98%;
     outline: none;
     border: 0em;
     white-space: nowrap;
     height: 100%;
+    position: relative;
+    right: 0;
+    resize: none;
+    scroll-behavior: auto;
+    display: inline-block;
+    /* border: none; */
+    overflow: scroll;
+    padding-top: 10px;
+    padding-left: 10px;
+    font-size: 1.5rem;
+    /* scroll-padding-right: 20px; */
+    scroll-padding-bottom: 100%; /* play with these for scroll pointer mismatch*/
+    line-height: 2.5rem;
+  }
+
+  .tab{
+    /* padding: 6px 12px; */
+    overflow: hidden;
+    z-index: 1;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    width: 80%;
+    outline: none;
+    border: 0em;
+    white-space: nowrap;
+    height: 5%;
     position: fixed;
     right: 0;
     resize: none;
     scroll-behavior: auto;
     /* border: none; */
-    padding: 10px;
+    /* padding: 10px; */
     font-size: 1.5rem;
-    scroll-padding-left: 20px;
+    /* scroll-padding-left: 20px; */
     line-height: 2.5rem;
+    margin-left: 20%;
   }
   
+
+  .tab button {
+    background-color:inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    min-width: 10%;
+  }
+  
+  .tab button:hover {
+    background-color: #ddd;
+  }
+  
+  .tab button.active {
+    background-color: #ccc;
+  }
+  
+  .tabcontent {
+    display: none;
+    /* display: inline-block; */
+    width: 80%;
+    outline: none;
+    border: 0em;
+    white-space: nowrap;
+    height:95%;
+    position: fixed;
+    right: 0;
+    resize: none;
+    scroll-behavior: auto;
+    top: 5%;
+    /* border: none; */
+    font-size: 1.5rem;
+    /* scroll-padding-bottom: 100%; */
+    line-height: 2.5rem;
+    border: 1px solid #ccc;
+    border-top: none;
+  }
   #flash {
     position: fixed;
     top: 10px;

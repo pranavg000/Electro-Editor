@@ -38,31 +38,28 @@
 //         if (err) throw err;
 //     });
 // }
-var rowcnt = document.getElementById("rowcnt");
-var piecestring = [];
-var inptype = ""
-var addpiecestart = -10;
-var lenofpiece = 0;
+var rowcnt;
+let fileNFileObj = {};
+var mainContent;
+var curObj = null;
+var container = document.getElementById("container");
+var tabcontainer = document.getElementById("tabcontainer");
+
 function addpiece() {
     console.log("*****");
-    console.log(addpiecestart);
-    console.log(lenofpiece);
-    console.log(inptype);
+    console.log(curObj.addpiecestart);
+    console.log(curObj.lenofpiece);
+    console.log(curObj.inptype);
     console.log("*****");
-    if (inptype.match(/insert/)) {
-        var reqstring = piecestring.join('');
-        addpiecestart;
+    if (curObj.inptype.match(/insert/)) {
+        var reqstring = curObj.piecestring.join('');
         console.log(reqstring);
-        curObj.pieceTable.addText(reqstring, addpiecestart+1);
+        curObj.pieceTable.addText(reqstring, curObj.addpiecestart + 1);
         console.log(curObj.pieceTable.undoStack);
         console.log(curObj.pieceTable);
-        lenofpiece;
-        piecestring = [];
     }
-    else if (inptype.match(/delete/)) {
-        addpiecestart;
-        lenofpiece;
-        curObj.pieceTable.deleteText(addpiecestart + 1, addpiecestart + lenofpiece+1);
+    else if (curObj.inptype.match(/delete/)) {
+        curObj.pieceTable.deleteText(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
         console.log(curObj.pieceTable.undoStack);
     }
 
@@ -81,8 +78,6 @@ const ipcRenderer = require('electron').ipcRenderer
 // const path = require('path')
 // const { readTitles } = require(path.resolve('actions/uiActions'))
 
-let fileNFileObj = {};
-inptype
 const readTitles = function (dataURL) {
     let titles = []
     fs.readdirSync(dataURL).forEach((file, i) => {
@@ -96,92 +91,116 @@ const readTitles = function (dataURL) {
     return titles
 }
 
-var numline = 0;
-var mainContent = document.getElementById('content');
-var curObj = null;
 readTitles('allfiles').map(({ title, dir }) => {
     el = document.createElement("li");
     text = document.createTextNode(`${title}`);
     el.appendChild(text)
     el.addEventListener('click', function (e) { // clicking on sidebar titles
+        var check = 0;
         if (curObj) curObj.fileData = Buffer(mainContent.value);
         if (!fileNFileObj[title]) {
-
             fileNFileObj[title] = new FileObject(dir, title);
+            createtab(title);
+            check = 1;
         }
-        curObj = fileNFileObj[title];
-        document.getElementById('content').value = curObj.fileData.toString();
-        var lines = mainContent.value.split("\n");
-        numline = lines.length;
-        incrementrow(lines.length);
+        settab(title);
+        if (check == 1) {
+            mainContent.value = curObj.fileData.toString();
+            var lines = mainContent.value.split("\n");
+            incrementrow(lines.length);
+        }
     })
     el.setAttribute("id", title);
     document.getElementById('titles').appendChild(el)
 });
 
-mainContent.addEventListener('keyup', function (e) {
-    console.log(numline);
-});
+function settab(filetitle) {
+    if (curObj) {
+        document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
+        console.log(document.getElementById(curObj.fileName + "button").className);
+        document.getElementById(curObj.fileName + "button").className = document.getElementById(curObj.fileName + "button").className.replace(" active", "");
+        removelistners();
+    }
+    curObj = fileNFileObj[filetitle];
+    mainContent = document.getElementById(filetitle + "textarea");
+    rowcnt = document.getElementById(filetitle + "rowcnt");
+    document.getElementById(filetitle + "tabcontent").style.display = "inline-block";
+    document.getElementById(curObj.fileName + "button").className += " active";
+    createlistners();
+}
 
-mainContent.addEventListener('keydown', function (e) {
+function createtab(filetitle) {
+    container.insertAdjacentHTML("beforeend", '<div id="' + filetitle + 'tabcontent" class="tabcontent"><div id="' + filetitle + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + filetitle + 'textarea" class="content"> </textarea></div>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '</button>');
+}
+
+function keuplistner(e) {
+    console.log(rowcnt.childNodes.length);
+}
+
+function keydownlistner(e) {
     if (curObj && e.key.match(/Arrow/)) {
+        if (curObj.piecestring.length != 0)
+            addpiece();
+        curObj.piecestring = [];
+        curObj.lenofpiece = 0;
+        curObj.addpiecestart = -10;
+        curObj.inptype = "";
+    }
+    if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey) {
         if (lenofpiece != 0)
             addpiece();
-        piecestring = [];
-        lenofpiece = 0;
-        addpiecestart = -10;
-        inptype = "";
-    }
-    if (curObj && (e.keyCode == 8 || e.keyCode == 46)) {
         var numnewline = document.getSelection().toString();
         lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd) + 1;
-        inptype = "delete";
+        curObj.inptype = "delete";
         if (numnewline.length == 0) {
             if ((mainContent.value[mainContent.selectionStart - 1] == '\n' && e.keyCode == 8) || (mainContent.value[mainContent.selectionStart] == '\n' && e.keyCode == 46)) {
-                numline -= 1;
                 decrementrow(1);
             }
             if (e.keyCode == 8 || e.keyCode == 46) {
-                addpiecestart = mainContent.selectionStart - 1;
+                curObj.addpiecestart = mainContent.selectionStart - 1;
                 if (e.keyCode == 46)
-                    addpiecestart++;
+                    curObj.addpiecestart++;
                 addpiece();
-                lenofpiece = 0;
-                addpiecestart = -10;
-                inptype = "";
+                curObjlenofpiece = 0;
+                curObj.addpiecestart = -10;
+                curObj.inptype = "";
             }
 
         }
         else {
-            addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
-            lenofpiece--;
-            addpiece();
-            lenofpiece = 0;
-            addpiecestart = -10;
-            inptype = "";
-            numline -= numnewline.split('\n').length - 1;
             decrementrow(numnewline.split('\n').length - 1);
+            curObj.addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
+            curObj.lenofpiece--;
+            addpiece();
+            curObj.lenofpiece = 0;
+            curObj.addpiecestart = -10;
+            curObj.inptype = "";
+
         }
 
         // console.log("ads" + mainContent.selectionStart + " " + mainContent.selectionEnd + document.getSelection());
     }
-    else if (curObj && e.keyCode == 13) {
+    else if (curObj && e.keyCode == 13 && !e.ctrlKey && !e.altKey) {
+        if (curObj.addpiecestart == -10)
+            curObj.addpiecestart = mainContent.selectionStart;
+        curObj.piecestring.push('\n');
+        curObj.inptype = e.inputType;
+        curObj.lenofpiece++;
         var numnewline = document.getSelection().toString();
-        numline -= numnewline.split('\n').length - 1;
-        numline++;
         incrementrow(1);
 
     }
-});
+}
 
-mainContent.addEventListener('input', function (e) {
+function insertlistner(e) {
     if (curObj) {
         if (e.inputType.match(/insert/)) {
-            if (addpiecestart == -10)
-                addpiecestart = mainContent.selectionStart - 1;
-            piecestring.push(e.data);
-            inptype = e.inputType;
-            lenofpiece++;
+            if (curObj.addpiecestart == -10)
+                curObj.addpiecestart = mainContent.selectionStart - 1;
+            curObj.piecestring.push(e.data);
+            curObj.inptype = e.inputType;
+            curObj.lenofpiece++;
         }
 
 
@@ -192,13 +211,59 @@ mainContent.addEventListener('input', function (e) {
             var titleofcurobj = document.getElementById(curObj.fileName.toString());
             var newtitle = titleofcurobj.innerHTML + "*";
             titleofcurobj.innerHTML = newtitle;
+            document.getElementById(curObj.fileName + "button").innerHTML = newtitle;
             // console.log(newtitle);
             curObj.isSaved = false;
         }
 
     }
 
-});
+}
+
+function scrolllistner(e) {
+    console.log(mainContent.scrollTop + "*" + mainContent.scrollHeight);
+    rowcnt.scrollTo(0, mainContent.scrollTop);
+
+}
+
+function clicklistener() {
+    console.log(Math.min(mainContent.selectionStart, mainContent.selectionEnd) == curObj.addpiecestart + curObj.lenofpiece);
+    if (Math.min(mainContent.selectionStart, mainContent.selectionEnd) != curObj.addpiecestart + curObj.lenofpiece) {
+        if (curObj.piecestring.length != 0)
+            addpiece();
+        curObj.piecestring = [];
+        curObj.lenofpiece = 0;
+        curObj.addpiecestart = -10;
+        curObj.inptype = "";
+    }
+}
+
+function createlistners() {
+    mainContent.addEventListener('keyup', keuplistner);
+
+    mainContent.addEventListener('keydown', keydownlistner);
+
+    mainContent.addEventListener('input', insertlistner);
+
+
+    mainContent.addEventListener('scroll', scrolllistner);
+
+    mainContent.addEventListener('click', clicklistener);
+}
+function removelistners() {
+    mainContent.removeEventListener('keyup', keuplistner);
+
+    mainContent.removeEventListener('keydown', keydownlistner);
+
+    mainContent.removeEventListener('input', insertlistner);
+
+
+    mainContent.removeEventListener('scroll', scrolllistner);
+
+    mainContent.removeEventListener('click', clicklistener);
+
+}
+
 
 ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     var titleofcurobj = document.getElementById(curObj.fileName.toString());
@@ -206,18 +271,19 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     if (curObj.isSaved == false) {
         newtitle = newtitle.slice(0, -1);
         titleofcurobj.innerHTML = newtitle;
+        document.getElementById(curObj.fileName + "button").innerHTML = newtitle;
         console.log(newtitle);
     }
     addpiece();
-    piecestring = [];
-    lenofpiece = 0;
-    addpiecestart = -10;
-    inptype = "";
+    curObj.piecestring = [];
+    curObj.lenofpiece = 0;
+    curObj.addpiecestart = -10;
+    curObj.inptype = "";
     curObj.saveTheFile();
 })
 
 ipcRenderer.on('UNDO_NEEDED', function (event, arg) {
-    if(curObj){
+    if (curObj) {
         curObj.pieceTable.applyUndo();
     }
 })
