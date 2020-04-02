@@ -13,6 +13,7 @@ class FileObject {
         this.inptype = ""
         this.addpiecestart = -10;
         this.lenofpiece = 0;
+        // this.nodenumber = 0;
     }
 
     readTheFile(fullFilePath) {
@@ -29,6 +30,7 @@ class FileObject {
         console.log(this.pieceTable);
         // return;
         if (!this.isSaved) {
+            this.isSaved = true;
             let fileDescriptor;
             var this_ = this;
             fs.open(this.fullFilePath.toString(), "w", function (err, fd) {

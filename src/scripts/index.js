@@ -101,6 +101,7 @@ readTitles('allfiles').map(({ title, dir }) => {
         if (!fileNFileObj[title]) {
             fileNFileObj[title] = new FileObject(dir, title);
             createtab(title);
+            // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
             check = 1;
         }
         settab(title);
@@ -114,24 +115,45 @@ readTitles('allfiles').map(({ title, dir }) => {
     document.getElementById('titles').appendChild(el)
 });
 
-function settab(filetitle) {
-    if (curObj) {
-        document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
-        console.log(document.getElementById(curObj.fileName + "button").className);
-        document.getElementById(curObj.fileName + "button").className = document.getElementById(curObj.fileName + "button").className.replace(" active", "");
-        removelistners();
+function deletetab(filetitle) {
+    console.log("working" + filetitle);
+    // fileNFileObj.delete(filetitle);
+    delete fileNFileObj[filetitle];
+    console.log(fileNFileObj + " " + Object.keys(fileNFileObj).length);
+    if (Object.keys(fileNFileObj).length != 0) {
+        if (curObj.fileName == filetitle) {
+            console.log(fileNFileObj);
+            console.log(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
+            settab(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
+        }
     }
-    curObj = fileNFileObj[filetitle];
-    mainContent = document.getElementById(filetitle + "textarea");
-    rowcnt = document.getElementById(filetitle + "rowcnt");
-    document.getElementById(filetitle + "tabcontent").style.display = "inline-block";
-    document.getElementById(curObj.fileName + "button").className += " active";
-    createlistners();
+    else
+        curObj = null;
+    document.getElementById(filetitle + "button").remove();
+    document.getElementById(filetitle + "tabcontent").remove();
+
+}
+function settab(filetitle) {
+    if (fileNFileObj[filetitle]) {
+        if (curObj) {
+            document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
+            console.log(document.getElementById(curObj.fileName + "button").className);
+            document.getElementById(curObj.fileName + "button").className = document.getElementById(curObj.fileName + "button").className.replace(" active", "");
+            removelistners();
+        }
+
+        curObj = fileNFileObj[filetitle];
+        mainContent = document.getElementById(filetitle + "textarea");
+        rowcnt = document.getElementById(filetitle + "rowcnt");
+        document.getElementById(filetitle + "tabcontent").style.display = "inline-block";
+        document.getElementById(curObj.fileName + "button").className += " active";
+        createlistners();
+    }
 }
 
 function createtab(filetitle) {
     container.insertAdjacentHTML("beforeend", '<div id="' + filetitle + 'tabcontent" class="tabcontent"><div id="' + filetitle + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + filetitle + 'textarea" class="content"> </textarea></div>');
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '</button>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '<span onclick=deletetab("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
 }
 
 function keuplistner(e) {
@@ -148,10 +170,12 @@ function keydownlistner(e) {
         curObj.inptype = "";
     }
     if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey) {
-        if (lenofpiece != 0)
+        if (curObj.lenofpiece != 0) {
             addpiece();
+            console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
+        }
         var numnewline = document.getSelection().toString();
-        lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd) + 1;
+        curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd) + 1;
         curObj.inptype = "delete";
         if (numnewline.length == 0) {
             if ((mainContent.value[mainContent.selectionStart - 1] == '\n' && e.keyCode == 8) || (mainContent.value[mainContent.selectionStart] == '\n' && e.keyCode == 46)) {
@@ -161,8 +185,9 @@ function keydownlistner(e) {
                 curObj.addpiecestart = mainContent.selectionStart - 1;
                 if (e.keyCode == 46)
                     curObj.addpiecestart++;
+                console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
                 addpiece();
-                curObjlenofpiece = 0;
+                curObj.lenofpiece = 0;
                 curObj.addpiecestart = -10;
                 curObj.inptype = "";
             }
@@ -208,10 +233,11 @@ function insertlistner(e) {
         console.log(mainContent.value[mainContent.selectionStart - 1]);
         if (curObj.isSaved) {
             // console.log("Unsaved");
+            curObj.fileName.toString();
             var titleofcurobj = document.getElementById(curObj.fileName.toString());
-            var newtitle = titleofcurobj.innerHTML + "*";
+            var newtitle = curObj.fileName.toString() + "*";
             titleofcurobj.innerHTML = newtitle;
-            document.getElementById(curObj.fileName + "button").innerHTML = newtitle;
+            document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deletetab("' + newtitle + '") style="float:right;">&#10005;</span>';
             // console.log(newtitle);
             curObj.isSaved = false;
         }
@@ -267,11 +293,10 @@ function removelistners() {
 
 ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     var titleofcurobj = document.getElementById(curObj.fileName.toString());
-    var newtitle = titleofcurobj.innerHTML;
+    var newtitle = curObj.fileName;
     if (curObj.isSaved == false) {
-        newtitle = newtitle.slice(0, -1);
         titleofcurobj.innerHTML = newtitle;
-        document.getElementById(curObj.fileName + "button").innerHTML = newtitle;
+        document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deletetab("' + newtitle + '") style="float:right;">&#10005;</span>';
         console.log(newtitle);
     }
     addpiece();
