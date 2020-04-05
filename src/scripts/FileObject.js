@@ -27,9 +27,10 @@ class FileObject {
     }
 
     saveTheFile() {
-        console.log(this.pieceTable);
+        // console.log(this.pieceTable);
         // return;
         if (!this.isSaved) {
+        // if(1){ // temp
             this.isSaved = true;
             let fileDescriptor;
             var this_ = this;
@@ -39,7 +40,7 @@ class FileObject {
                 console.log("File opened")
                 let posInFile = 0;
                 // let fullText = [];
-                console.log(this_, this_.pieceTable);
+                // console.log(this_, this_.pieceTable);
                 let piece = this_.pieceTable.pieceHead;
                 while (piece) {
                     // console.log(piece);

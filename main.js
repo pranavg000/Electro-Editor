@@ -1,5 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron')
-
+const { app, BrowserWindow, Menu, globalShortcut } = require('electron')
 
 function createWindow () {
   // Create the browser window.
@@ -10,29 +9,32 @@ function createWindow () {
       nodeIntegration: true
     }
   })
+  globalShortcut.register('CmdOrCtrl+Z', () => win.webContents.send('UNDO_NEEDED'));
+  globalShortcut.register('CmdOrCtrl+Y', () => win.webContents.send('REDO_NEEDED'));
+  globalShortcut.register('CmdOrCtrl+Shift+S', () => win.webContents.send('SAVE_NEEDED'));
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
       label: app.getName(),
       submenu: [
         {
           label: 'Save',
-          accelerator: 'CmdOrCtrl+S',
+          // accelerator: 'CmdOrCtrl+S',
           click: () => { 
             win.webContents.send('SAVE_NEEDED'); 
           }
         },
         {
           label: 'Save all',
-          accelerator: 'CmdOrCtrl+Shift+S',
+          // accelerator: 'CmdOrCtrl+Shift+S',
           click: () => { 
             win.webContents.send('SAVE_ALL_NEEDED'); 
           }
         },
         {
           label: 'Undo',
-          accelerator: 'CmdOrCtrl+Z',
+          // accelerator: 'CmdOrCtrl+Z',
           click: () => { 
-            win.webContents.send('UNDO_NEEDED'); 
+              win.webContents.send('UNDO_NEEDED');             
           }
         },
       ]
@@ -41,7 +43,7 @@ function createWindow () {
 
   // and load the index.html of the app.
   win.loadFile('src/index.html')
-
+  win.maximize()
   // Open the DevTools.
   win.webContents.openDevTools()
 
