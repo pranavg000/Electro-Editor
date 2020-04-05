@@ -32,11 +32,11 @@ class PieceTable {
     }
 
     addText(text, charNo){
-        console.log(text.length, charNo);
+        // console.log(text.length, charNo);
         let newPiece = new Piece(this.buffers.length, 0, text.length - 1);
         this.buffers.push(text);
         let pieceCoordinate = this.findPiece(charNo);
-        console.log(charNo, pieceCoordinate);
+        // console.log(charNo, pieceCoordinate);
         switch (pieceCoordinate[1]) {
             case 0:
                 this.insertBeforePiece(newPiece, pieceCoordinate[0]);
@@ -53,13 +53,14 @@ class PieceTable {
         
     }
 
-    insertAfterPiece(newPiece, piece){
+    insertAfterPiece(newPiece, piece, insertInUndo=true){
         
         newPiece.next = piece.next;
         if(newPiece.next) newPiece.next.prev = newPiece;
         else this.pieceTail = newPiece;
         piece.next = newPiece;
         newPiece.prev = piece;
+        if(insertInUndo)
         this.pushUndo(new PieceRange(piece, newPiece.next, 1));
         // this.pieces.splice(indexOfPiece+1,0,newPiece);
     }
@@ -78,8 +79,8 @@ class PieceTable {
         let pieceCopy = this.clone(pieceToSplit);
         this.pushUndo(new PieceRange(pieceCopy, pieceCopy, 0));
         pieceToSplit.end = index-1;
-        this.insertAfterPiece(newPiece, pieceToSplit);
-        this.insertAfterPiece(rightPiece, newPiece);
+        this.insertAfterPiece(newPiece, pieceToSplit, false);
+        this.insertAfterPiece(rightPiece, newPiece, false);
         // this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
     }
 
@@ -128,12 +129,12 @@ class PieceTable {
     // }
 
     deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo] inclusive delete 
-        console.log(startCharNo, endCharNo);
+        // console.log(startCharNo, endCharNo);
         if(startCharNo > endCharNo) return;
         let startPieceCoordinate = this.findPiece(startCharNo);
         let endPieceCoordinate = this.findPiece(endCharNo);  
-        console.log(startPieceCoordinate[0],startPieceCoordinate[1],startPieceCoordinate[2]);
-        console.log(endPieceCoordinate[0],endPieceCoordinate[1],endPieceCoordinate[2]);
+        // console.log(startPieceCoordinate[0],startPieceCoordinate[1],startPieceCoordinate[2]);
+        // console.log(endPieceCoordinate[0],endPieceCoordinate[1],endPieceCoordinate[2]);
         let piece = startPieceCoordinate[0];
         let startPiece = startPieceCoordinate[0], endPiece = endPieceCoordinate[0];
         if(startPieceCoordinate[1]===0){
