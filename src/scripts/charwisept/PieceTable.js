@@ -1,5 +1,6 @@
-const Piece = require('C:\\Users\\PRANAV\\Documents\\electron_tuts\\textEditor\\src\\scripts\\charwisept\\Piece.js').Piece;
-const PieceRange = require('C:\\Users\\PRANAV\\Documents\\electron_tuts\\textEditor\\src\\scripts\\charwisept\\Piece.js').PieceRange
+var path = require('path');
+const Piece = require((path.resolve(__dirname,'scripts/charwisept/Piece.js'))).Piece;
+const PieceRange = require((path.resolve(__dirname,'scripts/charwisept/Piece.js'))).PieceRange;
 
 class PieceTable {
     constructor(original){
