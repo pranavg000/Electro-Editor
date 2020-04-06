@@ -1,43 +1,3 @@
-// const fs = require('fs')
-// let fdm;
-// function open_(){
-//     //console.log("eher");
-//     fs.open("mynewfile1.txt", "r+", function(err, fd){
-//         if(err) console.log(err);
-//         fdm = fd;
-//         console.log("File opened")
-//     });
-// }
-// var para = document.getElementsByTagName('p')[0];
-// var buff = new Buffer(4096);
-// function read_(){
-
-//     fs.read(fdm, buff, 0, buff.length, 0, function(err, bytes){
-//         if(err) throw err;
-//         //console.log(buff.slice(0,bytes).toString());
-//         para.innerHTML = buff.slice(0,bytes).toString();
-//     });
-// }
-
-// function write_(){
-//     let st = para.innerHTML;
-//     let posinst=0;
-//     while(posinst < st.length){
-//         buff = Buffer.copy();
-//     }
-//     fs.write(fdm, buff, 0, buff.length, 0, function(err, bytes){
-//         if(err) throw err;
-//         console.log("Written in File")
-//         //console.log(buff.slice(0,bytes).toString());
-//         //para.innerHTML = buff.slice(0,bytes).toString();
-//     });
-// }
-
-// function close_(){
-//     fs.close(fdm, function (err) {
-//         if (err) throw err;
-//     });
-// }
 var rowcnt;
 let fileNFileObj = {};
 var mainContent;
@@ -362,4 +322,23 @@ function save_(currentFileObject) {
             curObj.isSaved = true;
         })
     }
+}
+
+function backupOnClose(){
+    let jsonData = JSON.stringify(fileNFileObj);
+    // console.log(jsonData);
+    fs.writeFile('.bak/rm.json', jsonData, function(err){
+        if(err) console.log(err);
+        else console.log("Written");
+    })
+
+}
+
+function loadBackup(){
+    let jsonData = fs.readFileSync(".bak/rm.json", 'utf8');
+    fileNFileObj = JSON.parse(jsonData);
+    for (let key in fileNFileObj){
+        fileNFileObj[key] = Object.assign(new FileObject, fileNFileObj[key]);
+    }
+    console.log(fileNFileObj);
 }
