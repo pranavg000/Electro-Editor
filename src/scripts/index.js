@@ -1,5 +1,5 @@
 var rowcnt;
-let fileNFileObj = {};
+var fileNFileObj = {};
 var mainContent;
 var curObj = null;
 var container = document.getElementById("container");
@@ -19,7 +19,7 @@ function addpiece() {
 
     }
     else if (curObj.inptype.match(/delete/)) {
-        console.log(curObj.addpiecestart + 1,curObj.addpiecestart + curObj.lenofpiece + 1);
+        console.log(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
         curObj.pieceTable.deleteText(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
         // console.log(curObj.pieceTable.undoStack);
     }
@@ -79,7 +79,7 @@ readTitles('allfiles').map(({ title, dir }) => {
         }
     })
     el.setAttribute("id", title);
-    document.getElementById('titles').appendChild(el)
+    document.getElementById('titles').appendChild(el);
 });
 
 function deletetab(filetitle) {
@@ -135,7 +135,7 @@ function keydownlistner(e) {
             addpiece();
     }
     if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey && mainContent.value.length >= mainContent.selectionStart) {
-        if (curObj.lenofpiece != 0&&curObj.inptype!="delete") {
+        if (curObj.lenofpiece != 0 && curObj.inptype != "delete") {
             addpiece();
             // console.log("MahaPagal");
             // console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
@@ -150,13 +150,12 @@ function keydownlistner(e) {
                 if (curObj.inptype != "delete") {
                     curObj.inptype = "delete";
                     curObj.addpiecestart = mainContent.selectionStart - 1;
-                    curObj.lenofpiece=1;
+                    curObj.lenofpiece = 1;
                     if (e.keyCode == 46)
                         curObj.addpiecestart++;
                 }
-                else
-                {
-                    curObj.addpiecestart=Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
+                else {
+                    curObj.addpiecestart = Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
                     curObj.lenofpiece++;
                 }
                 console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
@@ -324,36 +323,58 @@ function setCurText() {
 //     }
 // }
 
-function backupOnClose(){
-    for (const key in fileNFileObj){
+function backupOnClose() {
+    for (const key in fileNFileObj) {
         fileNFileObj[key].reset();
     }
     let jsonData = JSON.stringify(fileNFileObj);
     // console.log(jsonData);
-    fs.writeFile('.bak/main.json', jsonData, function(err){
-        if(err) console.log(err);
+    fs.writeFile('.bak/main.json', jsonData, function (err) {
+        if (err) console.log(err);
     })
 
 }
 
-function loadBackup(){
-    fs.exists(".bak/main.json", (exists)=>{
-        if(exists){
-            fs.readFile(".bak/main.json", (err, jsonData)=>{
-                if(err) return;
-                console.log(jsonData);
+function loadBackup() {
+    fs.exists(".bak/main.json", (exists) => {
+        if (exists) {
+            fs.readFile(".bak/main.json", (err, jsonData) => {
+                if (err) return;
+                // console.log(jsonData);
                 fileNFileObj = JSON.parse(jsonData);
-
-                for (const [key, value] of Object.entries(fileNFileObj)){
-                    fileNFileObj[key] = new FileObject("A","A", value);//Object.assign(new FileObject, fileNFileObj[key]);
-                }
                 console.log(fileNFileObj);
+
+                for (const [key, value] of Object.entries(fileNFileObj)) {
+                    fileNFileObj[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                }
+                setbackupdata();
             })
         }
     })
+
+    // setbackupdata();
 }
 
+function setbackupdata() {
+    let adsdbc = { "a": "d", "k": "l" };
+    console.log("Hi");
+    console.log(fileNFileObj);
+    for (var title in fileNFileObj) {
+
+        console.log(title);
+        createtab(title);
+        fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
+        settab(title);
+
+        mainContent.value = curObj.pieceTable.buffers[0].toString();
+        var lines = mainContent.value.split("\n");
+        incrementrow(lines.length);
+    }
+}
 loadBackup();
+// console.log(fileNFileObj)
+// setbackupdata();
+
 
 window.onbeforeunload = (e) => {
     backupOnClose();
