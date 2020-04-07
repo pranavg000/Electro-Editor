@@ -42,7 +42,10 @@ function createWindow () {
           label: 'Find',
           // accelerator: 'CmdOrCtrl+Z',
           click: () => { 
-              win.webContents.send('FIND');             
+              win.webContents.send('FIND'); 
+          }
+        }, 
+        {           
           label: 'Redo',
           // accelerator: 'CmdOrCtrl+Z',
           click: () => { 
