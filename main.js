@@ -10,6 +10,7 @@ function createWindow () {
   })
   globalShortcut.register('CmdOrCtrl+Z', () => win.webContents.send('UNDO_NEEDED'));
   globalShortcut.register('CmdOrCtrl+Y', () => win.webContents.send('REDO_NEEDED'));
+  globalShortcut.register('CmdOrCtrl+F', () => win.webContents.send('FIND'));
   globalShortcut.register('CmdOrCtrl+N', () => win.webContents.send('NEW_FILE_NEEDED'));
   globalShortcut.register('CmdOrCtrl+Shift+S', () => win.webContents.send('SAVE_NEEDED'));
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -38,6 +39,10 @@ function createWindow () {
           }
         },
         {
+          label: 'Find',
+          // accelerator: 'CmdOrCtrl+Z',
+          click: () => { 
+              win.webContents.send('FIND');             
           label: 'Redo',
           // accelerator: 'CmdOrCtrl+Z',
           click: () => { 

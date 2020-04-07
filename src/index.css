@@ -189,6 +189,32 @@
     -webkit-transition: opacity .25s ease-in-out;
   }
 
+
+
+#findbar {
+    display: none;
+    z-index: 10;
+    position: fixed;
+    padding: 10px 0;
+    top: 5%;
+    width: 20%;
+    height: auto;
+    right: 2%;
+    background: #f1f1f1;
+    border: 1px solid grey;
+
+}
+
+#searchbar{
+  font-size: 17px;
+  padding: 0 10px;
+  float: left;
+  border: none;
+  border-right:2px solid grey ;
+  outline: none;
+  width: 60%;
+  background: #f1f1f1;
+}
   .bottom_footer{
     position: fixed;
     bottom: 0;
