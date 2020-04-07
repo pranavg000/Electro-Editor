@@ -1,5 +1,5 @@
 var rowcnt;
-let fileNFileObj = {};
+var fileNFileObj = {};
 var mainContent;
 var curObj = null;
 var container = document.getElementById("container");
@@ -13,11 +13,13 @@ function addpiece() {
     console.log("*****");
     if (curObj.inptype.match(/insert/)) {
         var reqstring = curObj.piecestring.join('');
-        console.log(reqstring);
+        console.log(reqstring, curObj.addpiecestart + 1);
+        // console.log()
         curObj.pieceTable.addText(reqstring, curObj.addpiecestart + 1);
-        // console.log(curObj.pieceTable.undoStack);
+
     }
     else if (curObj.inptype.match(/delete/)) {
+        console.log(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
         curObj.pieceTable.deleteText(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
         // console.log(curObj.pieceTable.undoStack);
     }
@@ -62,7 +64,7 @@ readTitles('allfiles').map(({ title, dir }) => {
     el.appendChild(text)
     el.addEventListener('click', function (e) { // clicking on sidebar titles
         var check = 0;
-        if (curObj) curObj.fileData = Buffer(mainContent.value);
+        // if (curObj) curObj.fileData = Buffer(mainContent.value);
         if (!fileNFileObj[title]) {
             fileNFileObj[title] = new FileObject(dir, title);
             createtab(title);
@@ -71,13 +73,13 @@ readTitles('allfiles').map(({ title, dir }) => {
         }
         settab(title);
         if (check == 1) {
-            mainContent.value = curObj.fileData.toString();
+            mainContent.value = curObj.pieceTable.buffers[0].toString();
             var lines = mainContent.value.split("\n");
             incrementrow(lines.length);
         }
     })
     el.setAttribute("id", title);
-    document.getElementById('titles').appendChild(el)
+    document.getElementById('titles').appendChild(el);
 });
 
 function deletetab(filetitle) {
@@ -100,6 +102,7 @@ function deletetab(filetitle) {
 
 }
 function settab(filetitle) {
+    console.log(filetitle, curObj);
     if (fileNFileObj[filetitle]) {
         if (curObj) {
             document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
@@ -152,10 +155,7 @@ function keydownlistner(e) {
                         curObj.addpiecestart++;
                 }
                 else {
-                    var st = mainContent.selectionStart - 1;
-                    if (e.keyCode == 46)
-                        st++;
-                    curObj.addpiecestart = Math.min(curObj.addpiecestart, st);
+                    curObj.addpiecestart = Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
                     curObj.lenofpiece++;
                 }
                 console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
@@ -311,33 +311,74 @@ function setCurText() {
     curObj.isSaved = false;
 }
 
-function save_(currentFileObject) {
-    if (!currentFileObject.isSaved) {
-        if (currentFileObject) currentFileObject.fileData = mainContent.value;
-        fs.writeFile(currentFileObject.fullFilePath.toString(), currentFileObject.fileData, function (err) {
-            if (err) throw err;
-            // ele.innerHTML = ele.innerHTML.slice(0,ele.innerHTML.length-1);
-            console.log("Saved");
-            curObj.isSaved = true;
-        })
-    }
-}
+// function save_(currentFileObject) {
+//     if (!currentFileObject.isSaved) {
+//         if (currentFileObject) currentFileObject.fileData = mainContent.value;
+//         fs.writeFile(currentFileObject.fullFilePath.toString(), currentFileObject.fileData, function (err) {
+//             if (err) throw err;
+//             // ele.innerHTML = ele.innerHTML.slice(0,ele.innerHTML.length-1);
+//             console.log("Saved");
+//             curObj.isSaved = true;
+//         })
+//     }
+// }
 
 function backupOnClose() {
+    for (const key in fileNFileObj) {
+        fileNFileObj[key].reset();
+    }
     let jsonData = JSON.stringify(fileNFileObj);
     // console.log(jsonData);
-    fs.writeFile('.bak/rm.json', jsonData, function (err) {
+    fs.writeFile('.bak/main.json', jsonData, function (err) {
         if (err) console.log(err);
-        else console.log("Written");
     })
 
 }
 
 function loadBackup() {
-    let jsonData = fs.readFileSync(".bak/rm.json", 'utf8');
-    fileNFileObj = JSON.parse(jsonData);
-    for (let key in fileNFileObj) {
-        fileNFileObj[key] = Object.assign(new FileObject, fileNFileObj[key]);
-    }
+    fs.exists(".bak/main.json", (exists) => {
+        if (exists) {
+            fs.readFile(".bak/main.json", (err, jsonData) => {
+                if (err) return;
+                // console.log(jsonData);
+                fileNFileObj = JSON.parse(jsonData);
+                console.log(fileNFileObj);
+
+                for (const [key, value] of Object.entries(fileNFileObj)) {
+                    fileNFileObj[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                }
+                setbackupdata();
+            })
+        }
+    })
+
+    // setbackupdata();
+}
+
+function setbackupdata() {
+    let adsdbc = { "a": "d", "k": "l" };
+    console.log("Hi");
     console.log(fileNFileObj);
+    for (var title in fileNFileObj) {
+
+        console.log(title);
+        createtab(title);
+        fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
+        settab(title);
+
+        mainContent.value = curObj.pieceTable.buffers[0].toString();
+        var lines = mainContent.value.split("\n");
+        incrementrow(lines.length);
+    }
+}
+loadBackup();
+// console.log(fileNFileObj)
+// setbackupdata();
+
+
+window.onbeforeunload = (e) => {
+    backupOnClose();
+    console.log("Back up complete");
+    ipcRenderer.send('APP_QUIT');
+    // e.returnValue = false
 }

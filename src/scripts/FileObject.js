@@ -2,29 +2,35 @@ const fs = require('fs')
 
 class FileObject {
 
-    constructor(fullFilePath, fileName) {
-        this.isOpen = true;
-        this.isSaved = true;
-        this.fileName = Object(fileName);
-        this.fileData = fs.readFileSync(fullFilePath, 'utf8');
-        this.pieceTable = new PieceTable(this.fileData);
-        this.fullFilePath = Object(fullFilePath);
-        this.piecestring = [];
-        this.inptype = ""
-        this.addpiecestart = -10;
-        this.lenofpiece = 0;
-        // this.nodenumber = 0;
+    constructor(fullFilePath, fileName, clone=null) {
+        if(!clone){
+            this.isOpen = true;
+            this.isSaved = true;
+            this.fileName = Object(fileName);
+            let fileData = fs.readFileSync(fullFilePath, 'utf8');
+            this.pieceTable = new PieceTable(fileData);
+            this.fullFilePath = Object(fullFilePath);
+            this.piecestring = [];
+            this.inptype = ""
+            this.addpiecestart = -10;
+            this.lenofpiece = 0;
+        }
+        else{
+            this.isOpen = clone.isOpen;
+            this.isSaved = clone.isSaved;
+            this.fileName = Object(clone.fileName);
+            this.pieceTable = new PieceTable(clone.pieceTable.buffers[0]);
+            this.fullFilePath = Object(clone.fullFilePath);
+            this.piecestring = [];
+            this.inptype = ""
+            this.addpiecestart = -10;
+            this.lenofpiece = 0;
+        }
+        
+        
+        
     }
 
-    readTheFile(fullFilePath) {
-
-        fs.readFile(fullFilePath, (err, data) => {
-            if (err) throw err;
-            // console.log(data);
-            console.log("File read!!")
-            this.fileData = data;
-        });
-    }
 
     saveTheFile() {
         // console.log(this.pieceTable);
@@ -59,12 +65,21 @@ class FileObject {
                     // this_.pieceTable = new PieceTable(fullText.join(''));
                 });
             });
-
-            // fs.writeFile(this.fullFilePath, this.fileData, function(err){
-            //     if(err) throw err;
-            //     console.log("Saved");
-            // })
         }
+    }
+
+    reset(){
+        let ms = [];
+        let piece = this.pieceTable.pieceHead;
+        while (piece) {
+            let length = piece.end - piece.start + 1;
+            for(let i=piece.start;i<=piece.end;i++){
+                ms.push(this.pieceTable.buffers[piece.bufferIndex][i]);
+            }
+            piece = piece.next;
+        }
+        this.pieceTable = new PieceTable(ms.join(''));
+        console.log(ms.join(''));
     }
 
 
