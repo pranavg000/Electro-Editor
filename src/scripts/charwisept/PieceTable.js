@@ -3,21 +3,12 @@ const Piece = require((path.resolve(__dirname,'scripts/charwisept/Piece.js'))).P
 const PieceRange = require((path.resolve(__dirname,'scripts/charwisept/Piece.js'))).PieceRange;
 
 class PieceTable {
-    constructor(original, clone=null){
-        if(!clone){
-            this.buffers = [ original ];
-            this.pieceHead = new Piece(0, 0, original.length-1);
-            this.pieceTail = this.pieceHead;
-            this.undoStack = new Array();
-            this.redoStack = new Array();
-        }
-        // else{
-        //     this.buffers = clone.buffers;
-        //     this.pieceHead = new Piece(clone.pieceHead;
-        //     this.pieceTail = clone.pieceTail;
-        //     this.undoStack = clone.undoStack;
-        //     this.redoStack = clone.redoStack;
-        // }
+    constructor(original){  
+        this.buffers = [ original ];
+        this.pieceHead = new Piece(0, 0, original.length-1);
+        this.pieceTail = this.pieceHead;
+        this.undoStack = new Array();
+        this.redoStack = new Array(); 
     }
 
 
