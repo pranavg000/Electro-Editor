@@ -96,6 +96,7 @@ function deletetab(filetitle) {
 
 }
 function settab(filetitle) {
+    console.log(filetitle, curObj);
     if (fileNFileObj[filetitle]) {
         if (curObj) {
             document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
@@ -332,22 +333,34 @@ function backupOnClose(){
     }
     let jsonData = JSON.stringify(fileNFileObj);
     // console.log(jsonData);
-    fs.writeFile('.bak/rm.json', jsonData, function(err){
+    fs.writeFile('.bak/main.json', jsonData, function(err){
         if(err) console.log(err);
-        else console.log("Written");
     })
 
 }
 
 function loadBackup(){
-    let jsonData = fs.readFileSync(".bak/rm.json", 'utf8');
-    console.log(jsonData);
-    fileNFileObj = JSON.parse(jsonData);
-    console.log(typeof(jsonData), typeof(stringify({'a':'a'})));
-    console.log(fileNFileObj);
+    fs.exists(".bak/main.json", (exists)=>{
+        if(exists){
+            fs.readFile(".bak/main.json", (err, jsonData)=>{
+                if(err) return;
+                console.log(jsonData);
+                fileNFileObj = JSON.parse(jsonData);
 
-    for (const [key, value] of Object.entries(fileNFileObj)){
-        fileNFileObj[key] = new FileObject("A","A", value);//Object.assign(new FileObject, fileNFileObj[key]);
-    }
-    console.log(fileNFileObj);
+                for (const [key, value] of Object.entries(fileNFileObj)){
+                    fileNFileObj[key] = new FileObject("A","A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                }
+                console.log(fileNFileObj);
+            })
+        }
+    })
+}
+
+loadBackup();
+
+window.onbeforeunload = (e) => {
+    backupOnClose();
+    console.log("Back up complete");
+    ipcRenderer.send('APP_QUIT');
+    // e.returnValue = false
 }
