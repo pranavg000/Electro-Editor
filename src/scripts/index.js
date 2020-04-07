@@ -13,14 +13,16 @@ function addpiece() {
     console.log("*****");
     if (curObj.inptype.match(/insert/)) {
         var reqstring = curObj.piecestring.join('');
-        console.log(reqstring);
+        console.log(reqstring, curObj.addpiecestart + 1);
+        // console.log()
         curObj.pieceTable.addText(reqstring, curObj.addpiecestart + 1);
-        console.log(curObj.pieceTable.undoStack);
-        console.log(curObj.pieceTable);
+        // console.log(curObj.pieceTable.undoStack);
+        // console.log(curObj.pieceTable);
     }
     else if (curObj.inptype.match(/delete/)) {
+        console.log(curObj.addpiecestart + 1,curObj.addpiecestart + curObj.lenofpiece + 1);
         curObj.pieceTable.deleteText(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
-        console.log(curObj.pieceTable.undoStack);
+        // console.log(curObj.pieceTable.undoStack);
     }
 
 }
@@ -57,7 +59,7 @@ readTitles('allfiles').map(({ title, dir }) => {
     el.appendChild(text)
     el.addEventListener('click', function (e) { // clicking on sidebar titles
         var check = 0;
-        if (curObj) curObj.fileData = Buffer(mainContent.value);
+        // if (curObj) curObj.fileData = Buffer(mainContent.value);
         if (!fileNFileObj[title]) {
             fileNFileObj[title] = new FileObject(dir, title);
             createtab(title);
@@ -66,7 +68,7 @@ readTitles('allfiles').map(({ title, dir }) => {
         }
         settab(title);
         if (check == 1) {
-            mainContent.value = curObj.fileData.toString();
+            mainContent.value = curObj.pieceTable.buffers[0].toString();
             var lines = mainContent.value.split("\n");
             incrementrow(lines.length);
         }
@@ -312,19 +314,22 @@ function setCurText(){
     curObj.inptype = "";
 }
 
-function save_(currentFileObject) {
-    if (!currentFileObject.isSaved) {
-        if (currentFileObject) currentFileObject.fileData = mainContent.value;
-        fs.writeFile(currentFileObject.fullFilePath.toString(), currentFileObject.fileData, function (err) {
-            if (err) throw err;
-            // ele.innerHTML = ele.innerHTML.slice(0,ele.innerHTML.length-1);
-            console.log("Saved");
-            curObj.isSaved = true;
-        })
-    }
-}
+// function save_(currentFileObject) {
+//     if (!currentFileObject.isSaved) {
+//         if (currentFileObject) currentFileObject.fileData = mainContent.value;
+//         fs.writeFile(currentFileObject.fullFilePath.toString(), currentFileObject.fileData, function (err) {
+//             if (err) throw err;
+//             // ele.innerHTML = ele.innerHTML.slice(0,ele.innerHTML.length-1);
+//             console.log("Saved");
+//             curObj.isSaved = true;
+//         })
+//     }
+// }
 
 function backupOnClose(){
+    for (const key in fileNFileObj){
+        fileNFileObj[key].reset();
+    }
     let jsonData = JSON.stringify(fileNFileObj);
     // console.log(jsonData);
     fs.writeFile('.bak/rm.json', jsonData, function(err){
@@ -336,9 +341,13 @@ function backupOnClose(){
 
 function loadBackup(){
     let jsonData = fs.readFileSync(".bak/rm.json", 'utf8');
+    console.log(jsonData);
     fileNFileObj = JSON.parse(jsonData);
-    for (let key in fileNFileObj){
-        fileNFileObj[key] = Object.assign(new FileObject, fileNFileObj[key]);
+    console.log(typeof(jsonData), typeof(stringify({'a':'a'})));
+    console.log(fileNFileObj);
+
+    for (const [key, value] of Object.entries(fileNFileObj)){
+        fileNFileObj[key] = new FileObject("A","A", value);//Object.assign(new FileObject, fileNFileObj[key]);
     }
     console.log(fileNFileObj);
 }
