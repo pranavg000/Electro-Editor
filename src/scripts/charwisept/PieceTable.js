@@ -3,13 +3,23 @@ const Piece = require((path.resolve(__dirname,'scripts/charwisept/Piece.js'))).P
 const PieceRange = require((path.resolve(__dirname,'scripts/charwisept/Piece.js'))).PieceRange;
 
 class PieceTable {
-    constructor(original){
-        this.buffers = [ original ];
-        this.pieceHead = new Piece(0, 0, original.length-1);
-        this.pieceTail = this.pieceHead;
-        this.undoStack = new Array();
-        this.redoStack = new Array();
+    constructor(original, clone=null){
+        if(!clone){
+            this.buffers = [ original ];
+            this.pieceHead = new Piece(0, 0, original.length-1);
+            this.pieceTail = this.pieceHead;
+            this.undoStack = new Array();
+            this.redoStack = new Array();
+        }
+        // else{
+        //     this.buffers = clone.buffers;
+        //     this.pieceHead = new Piece(clone.pieceHead;
+        //     this.pieceTail = clone.pieceTail;
+        //     this.undoStack = clone.undoStack;
+        //     this.redoStack = clone.redoStack;
+        // }
     }
+
 
     findPiece(charNo){
         if(charNo === 1){
@@ -128,8 +138,8 @@ class PieceTable {
     //     } 
     // }
 
-    deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo] inclusive delete 
-        // console.log(startCharNo, endCharNo);
+    deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo)  delete 
+        console.log(startCharNo, endCharNo);
         if(startCharNo > endCharNo) return;
         let startPieceCoordinate = this.findPiece(startCharNo);
         let endPieceCoordinate = this.findPiece(endCharNo);  
@@ -148,7 +158,7 @@ class PieceTable {
         }
         else if(startPieceCoordinate[1]===2) {
             piece=piece.next;
-            startPiece = startPiece.next;
+            // startPiece = startPiece.next;
         }
         
         while(piece != endPieceCoordinate[0] && piece!=null){
