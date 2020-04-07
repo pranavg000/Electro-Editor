@@ -43,7 +43,7 @@ class FileObject {
             fs.open(this.fullFilePath.toString(), "w", function (err, fd) {
                 if (err) console.log(err);
                 fileDescriptor = fd
-                console.log("File opened")
+                // console.log("File opened")
                 let posInFile = 0;
                 // let fullText = [];
                 // console.log(this_, this_.pieceTable);
@@ -60,7 +60,7 @@ class FileObject {
                 }
                 fs.close(fileDescriptor, function (err) {
                     if (err) console.log(err);
-                    console.log("Written in File")
+                    console.log("Saved")
                     // console.log(fullText.join(''))
                     // this_.pieceTable = new PieceTable(fullText.join(''));
                 });

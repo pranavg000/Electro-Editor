@@ -1,5 +1,4 @@
 const { app, BrowserWindow, Menu, globalShortcut, ipcMain } = require('electron')
-
 function createWindow () {
   // Create the browser window.
   let win = new BrowserWindow({
