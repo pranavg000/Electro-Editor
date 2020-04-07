@@ -132,7 +132,7 @@ function keydownlistner(e) {
             addpiece();
     }
     if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey && mainContent.value.length >= mainContent.selectionStart) {
-        if (curObj.lenofpiece != 0&&curObj.inptype!="delete") {
+        if (curObj.lenofpiece != 0 && curObj.inptype != "delete") {
             addpiece();
             // console.log("MahaPagal");
             // console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
@@ -147,13 +147,15 @@ function keydownlistner(e) {
                 if (curObj.inptype != "delete") {
                     curObj.inptype = "delete";
                     curObj.addpiecestart = mainContent.selectionStart - 1;
-                    curObj.lenofpiece=1;
+                    curObj.lenofpiece = 1;
                     if (e.keyCode == 46)
                         curObj.addpiecestart++;
                 }
-                else
-                {
-                    curObj.addpiecestart=Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
+                else {
+                    var st = mainContent.selectionStart - 1;
+                    if (e.keyCode == 46)
+                        st++;
+                    curObj.addpiecestart = Math.min(curObj.addpiecestart, st);
                     curObj.lenofpiece++;
                 }
                 console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
@@ -321,20 +323,20 @@ function save_(currentFileObject) {
     }
 }
 
-function backupOnClose(){
+function backupOnClose() {
     let jsonData = JSON.stringify(fileNFileObj);
     // console.log(jsonData);
-    fs.writeFile('.bak/rm.json', jsonData, function(err){
-        if(err) console.log(err);
+    fs.writeFile('.bak/rm.json', jsonData, function (err) {
+        if (err) console.log(err);
         else console.log("Written");
     })
 
 }
 
-function loadBackup(){
+function loadBackup() {
     let jsonData = fs.readFileSync(".bak/rm.json", 'utf8');
     fileNFileObj = JSON.parse(jsonData);
-    for (let key in fileNFileObj){
+    for (let key in fileNFileObj) {
         fileNFileObj[key] = Object.assign(new FileObject, fileNFileObj[key]);
     }
     console.log(fileNFileObj);
