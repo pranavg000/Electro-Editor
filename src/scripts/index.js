@@ -223,7 +223,7 @@ function scrolllistner(e) {
 
 }
 
-function clicklistener() {
+function clicklistener(e) {
     // console.log(Math.min(mainContent.selectionStart, mainContent.selectionEnd) == curObj.addpiecestart + curObj.lenofpiece);
     if (Math.min(mainContent.selectionStart, mainContent.selectionEnd) != curObj.addpiecestart + curObj.lenofpiece) {
         if (curObj.piecestring.length != 0)
@@ -286,6 +286,16 @@ ipcRenderer.on('REDO_NEEDED', function (event, arg) {
     }
 });
 
+ipcRenderer.on('FIND', function (event, arg) {
+    // console.log('REDO_NEEDED')
+    if (curObj) {
+        document.getElementById("findbar").style.display = "inline";
+        // const noti ={"title":"asv","body":"adsf"};
+        // const find = new window.Notification("abs",noti);
+        // const find1 =new window.HTMLDialogElement;
+    }
+});
+
 function setCurText() {
     let ms = [];
     let piece = curObj.pieceTable.pieceHead;
@@ -310,19 +320,107 @@ function setCurText() {
     // console.log(newtitle);
     curObj.isSaved = false;
 }
+var issearchtextchanged = 1;
+var searchidx = 0;
+var reqarray = [];
 
-// function save_(currentFileObject) {
-//     if (!currentFileObject.isSaved) {
-//         if (currentFileObject) currentFileObject.fileData = mainContent.value;
-//         fs.writeFile(currentFileObject.fullFilePath.toString(), currentFileObject.fileData, function (err) {
-//             if (err) throw err;
-//             // ele.innerHTML = ele.innerHTML.slice(0,ele.innerHTML.length-1);
-//             console.log("Saved");
-//             curObj.isSaved = true;
-//         })
+// document.getElementById("searchbar").addEventListener('keyup', function def(e) {
+//     if (e.keyCode == 13) {
+//         findbarsearch();
 //     }
-// }
+// });
 
+document.getElementById("searchbar").addEventListener('input', function def(e) {
+    issearchtextchanged = 1;
+    document.getElementById("findbar-text").innerHTML = "No Results";
+
+});
+
+
+function findbarsearch() {
+    let pattern = document.getElementById("searchbar").value;
+    if (issearchtextchanged == 1) {
+        reqarray = findtext(pattern);
+        console.log(reqarray);
+        searchidx = 0;
+        issearchtextchanged = 0;
+        if (reqarray.length > 0) {
+            mainContent.select();
+            // mainContent.setSelectionRange(Math.max(0,reqarray[searchidx]-50), Math.max(0,reqarray[searchidx]-50));
+            // mainContent.focus();
+            mainContent.scrollTo(Math.max(0,reqarray[searchidx]-50),Math.max(0,reqarray[searchidx]-50));
+            mainContent.setSelectionRange(reqarray[searchidx], reqarray[searchidx] + pattern.length);
+            searchidx = (searchidx + 1) % reqarray.length;
+        }
+        document.getElementById("findbar-text").innerHTML = (searchidx) + "/" + reqarray.length;
+    }
+    else {
+        if (reqarray.length != 0) {
+            mainContent.select();
+            mainContent.scrollTo(Math.max(0,reqarray[searchidx]-50),Math.max(0,reqarray[searchidx]-50));
+            mainContent.setSelectionRange(reqarray[searchidx], reqarray[searchidx] + pattern.length);
+            document.getElementById("findbar-text").innerHTML = (searchidx + 1) + "/" + reqarray.length;
+            searchidx = (searchidx + 1) % reqarray.length;
+        }
+    }
+    // mainContent.blur();
+
+}
+
+function iseq(c1, c2) {
+    // console.log(c1.toString().toLowerCase() == c2.toString().toLowerCase());
+    return c1.toString().toLowerCase() == c2.toString().toLowerCase();
+}
+
+function findtext(pattern) {
+    let texttosearch = mainContent.value;
+    let M = pattern.length;
+    let N = texttosearch.length;
+    let lps = new Array(M);
+    let i = 1;
+    let j = 0;
+    let len = 0;
+    lps[0] = 0;
+    while (i < M) {
+        if (pattern[i] == pattern[len]) {
+            len++;
+            lps[i] = len;
+            i++;
+        }
+        else {
+            if (len != 0)
+                len = lps[len - 1];
+            else {
+                lps[i] = 0;
+                i++;
+            }
+        }
+    }
+    i = 0;
+    let ans = [];
+    while (i < N) {
+        if (iseq(pattern[j], texttosearch[i])) {
+            i++;
+            j++;
+            if (j == M) {
+                ans.push(i - j);
+                j = lps[j - 1];
+            }
+        }
+        else {
+            if (j != 0)
+                j = lps[j - 1];
+            else
+                i++;
+        }
+    }
+    return ans;
+
+}
+
+function hide() {
+    document.getElementById("findbar").style.display = "none";
+}
 function backupOnClose() {
     for (const key in fileNFileObj) {
         fileNFileObj[key].reset();
@@ -356,8 +454,7 @@ function loadBackup() {
 }
 
 function setbackupdata() {
-    let adsdbc = { "a": "d", "k": "l" };
-    console.log("Hi");
+
     console.log(fileNFileObj);
     for (var title in fileNFileObj) {
 
@@ -372,6 +469,7 @@ function setbackupdata() {
     }
 }
 loadBackup();
+// iseq('A','A');
 // console.log(fileNFileObj)
 // setbackupdata();
 
