@@ -73,7 +73,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-ipcMain.on('APP_QUIT', function (event, arg) {
-    app.quit();
-})

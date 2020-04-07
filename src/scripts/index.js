@@ -102,7 +102,7 @@ function deletetab(filetitle) {
 
 }
 function settab(filetitle) {
-    console.log(filetitle, curObj);
+    // console.log(filetitle, curObj);
     if (fileNFileObj[filetitle]) {
         if (curObj) {
             document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
@@ -120,9 +120,13 @@ function settab(filetitle) {
     }
 }
 
-function createtab(filetitle) {
+function createtab(filetitle, isSaved=true) {
     container.insertAdjacentHTML("beforeend", '<div id="' + filetitle + 'tabcontent" class="tabcontent"><div id="' + filetitle + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + filetitle + 'textarea" class="content"> </textarea></div>');
+    if(isSaved)
     tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '<span onclick=deletetab("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
+    else
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + "*" + '<span onclick=deletetab("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
+
 }
 
 function keuplistner(e) {
@@ -356,16 +360,13 @@ function loadBackup() {
 }
 
 function setbackupdata() {
-    let adsdbc = { "a": "d", "k": "l" };
-    console.log("Hi");
-    console.log(fileNFileObj);
+
     for (var title in fileNFileObj) {
 
-        console.log(title);
-        createtab(title);
+        // console.log(title);
+        createtab(title, fileNFileObj[title].isSaved);
         fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
         settab(title);
-
         mainContent.value = curObj.pieceTable.buffers[0].toString();
         var lines = mainContent.value.split("\n");
         incrementrow(lines.length);
@@ -379,6 +380,6 @@ loadBackup();
 window.onbeforeunload = (e) => {
     backupOnClose();
     console.log("Back up complete");
-    ipcRenderer.send('APP_QUIT');
+    // ipcRenderer.send('APP_QUIT');
     // e.returnValue = false
 }
