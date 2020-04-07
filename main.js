@@ -1,5 +1,4 @@
 const { app, BrowserWindow, Menu, globalShortcut, ipcMain } = require('electron')
-
 function createWindow () {
   // Create the browser window.
   let win = new BrowserWindow({
@@ -12,6 +11,7 @@ function createWindow () {
   globalShortcut.register('CmdOrCtrl+Z', () => win.webContents.send('UNDO_NEEDED'));
   globalShortcut.register('CmdOrCtrl+Y', () => win.webContents.send('REDO_NEEDED'));
   globalShortcut.register('CmdOrCtrl+F', () => win.webContents.send('FIND'));
+  globalShortcut.register('CmdOrCtrl+N', () => win.webContents.send('NEW_FILE_NEEDED'));
   globalShortcut.register('CmdOrCtrl+Shift+S', () => win.webContents.send('SAVE_NEEDED'));
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
@@ -43,6 +43,17 @@ function createWindow () {
           // accelerator: 'CmdOrCtrl+Z',
           click: () => { 
               win.webContents.send('FIND');             
+          label: 'Redo',
+          // accelerator: 'CmdOrCtrl+Z',
+          click: () => { 
+              win.webContents.send('REDO_NEEDED');             
+          }
+        },
+        {
+          label: 'New File',
+          // accelerator: 'CmdOrCtrl+Z',
+          click: () => { 
+              win.webContents.send('NEW_FILE_NEEDED');             
           }
         },
       ]
@@ -80,8 +91,4 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
-})
-
-ipcMain.on('APP_QUIT', function (event, arg) {
-    app.quit();
 })
