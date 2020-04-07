@@ -188,3 +188,19 @@
     -moz-transition: opacity .25s ease-in-out;
     -webkit-transition: opacity .25s ease-in-out;
   }
+
+  .bottom_footer{
+    position: fixed;
+    bottom: 0;
+    width: 190px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  #bottom_footer_form input {
+    width: 100%;
+  }
+  #bottom_form_label {
+    color: white;
+  }

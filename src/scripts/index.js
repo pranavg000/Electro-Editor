@@ -416,3 +416,57 @@ window.onbeforeunload = (e) => {
     backupOnClose();
     console.log("Back up complete");
 }
+
+let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
+
+ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
+    // console.log("RECEIVED")
+    // if (textInputFormDiv.style.display === "none") {
+    //     textInputFormDiv.style.display = "block";
+    // } else {
+    //     textInputFormDiv.style.display = "none";
+    // }
+
+    if (textInputFormDiv.style.display === "none") {
+        textInputFormDiv.style.display = "block";
+    }
+})
+
+let textInputForm =  document.getElementById('bottom_footer_form');
+textInputForm.addEventListener('submit', function(e){
+    e.preventDefault()
+    let newFileName = document.getElementById("bottom_form_input").value;
+    document.getElementById("bottom_form_input").value = "";
+    let newFilePath = "allfiles/"+newFileName;
+    if(fs.exists(newFilePath, (exists)=>{
+        if(!exists){
+            fs.closeSync(fs.openSync(newFilePath, 'w'));
+            el = document.createElement("li");
+            text = document.createTextNode(newFileName);
+            el.appendChild(text)
+            el.addEventListener('click', function (e) { // clicking on sidebar titles
+                var check = 0;
+                // if (curObj) curObj.fileData = Buffer(mainContent.value);
+                if (!fileNFileObj[newFileName]) {
+                    fileNFileObj[newFileName] = new FileObject(newFilePath, newFileName);
+                    createtab(newFileName);
+                    // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
+                    check = 1;
+                }
+                settab(newFileName);
+                if (check == 1) {
+                    mainContent.value = curObj.pieceTable.buffers[0].toString();
+                    var lines = mainContent.value.split("\n");
+                    incrementrow(lines.length);
+                }
+            })
+            el.setAttribute("id", newFileName);
+            document.getElementById('titles').appendChild(el);
+
+            textInputFormDiv.style.display = "none";
+        }
+    }))
+    // write file here ?
+    console.log(newFileName)
+})
+
