@@ -16,14 +16,19 @@ function addpiece() {
         console.log(reqstring, curObj.addpiecestart + 1);
         // console.log()
         curObj.pieceTable.addText(reqstring, curObj.addpiecestart + 1);
-        // console.log(curObj.pieceTable.undoStack);
-        // console.log(curObj.pieceTable);
+
     }
     else if (curObj.inptype.match(/delete/)) {
         console.log(curObj.addpiecestart + 1,curObj.addpiecestart + curObj.lenofpiece + 1);
         curObj.pieceTable.deleteText(curObj.addpiecestart + 1, curObj.addpiecestart + curObj.lenofpiece + 1);
         // console.log(curObj.pieceTable.undoStack);
     }
+    curObj.piecestring = [];
+    curObj.lenofpiece = 0;
+    curObj.addpiecestart = -10;
+    curObj.inptype = "";
+    console.log(curObj.pieceTable);
+
 
 }
 
@@ -78,14 +83,15 @@ readTitles('allfiles').map(({ title, dir }) => {
 });
 
 function deletetab(filetitle) {
-    console.log("working" + filetitle);
+    // console.log("working" + filetitle);
     // fileNFileObj.delete(filetitle);
     delete fileNFileObj[filetitle];
-    console.log(fileNFileObj + " " + Object.keys(fileNFileObj).length);
+    // console.log(fileNFileObj + " " + Object.keys(fileNFileObj).length);
     if (Object.keys(fileNFileObj).length != 0) {
         if (curObj.fileName == filetitle) {
-            console.log(fileNFileObj);
-            console.log(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
+            // console.log(fileNFileObj);
+            // console.log(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
+
             settab(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
         }
     }
@@ -100,7 +106,7 @@ function settab(filetitle) {
     if (fileNFileObj[filetitle]) {
         if (curObj) {
             document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
-            console.log(document.getElementById(curObj.fileName + "button").className);
+            // console.log(document.getElementById(curObj.fileName + "button").className);
             document.getElementById(curObj.fileName + "button").className = document.getElementById(curObj.fileName + "button").className.replace(" active", "");
             removelistners();
         }
@@ -127,53 +133,54 @@ function keydownlistner(e) {
     if (curObj && e.key.match(/Arrow/)) {
         if (curObj.piecestring.length != 0)
             addpiece();
-        curObj.piecestring = [];
-        curObj.lenofpiece = 0;
-        curObj.addpiecestart = -10;
-        curObj.inptype = "";
     }
-    if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey) {
-        if (curObj.lenofpiece != 0) {
+    if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey && mainContent.value.length >= mainContent.selectionStart) {
+        if (curObj.lenofpiece != 0&&curObj.inptype!="delete") {
             addpiece();
-            console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
+            // console.log("MahaPagal");
+            // console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
         }
         var numnewline = document.getSelection().toString();
-        curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd) + 1;
-        curObj.inptype = "delete";
+
         if (numnewline.length == 0) {
             if ((mainContent.value[mainContent.selectionStart - 1] == '\n' && e.keyCode == 8) || (mainContent.value[mainContent.selectionStart] == '\n' && e.keyCode == 46)) {
                 decrementrow(1);
             }
             if (e.keyCode == 8 || e.keyCode == 46) {
-                curObj.addpiecestart = mainContent.selectionStart - 1;
-                if (e.keyCode == 46)
-                    curObj.addpiecestart++;
+                if (curObj.inptype != "delete") {
+                    curObj.inptype = "delete";
+                    curObj.addpiecestart = mainContent.selectionStart - 1;
+                    curObj.lenofpiece=1;
+                    if (e.keyCode == 46)
+                        curObj.addpiecestart++;
+                }
+                else
+                {
+                    curObj.addpiecestart=Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
+                    curObj.lenofpiece++;
+                }
                 console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
-                addpiece();
-                curObj.lenofpiece = 0;
-                curObj.addpiecestart = -10;
-                curObj.inptype = "";
+                // addpiece();
             }
 
         }
         else {
             decrementrow(numnewline.split('\n').length - 1);
+            curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd)
             curObj.addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
-            curObj.lenofpiece--;
             addpiece();
-            curObj.lenofpiece = 0;
-            curObj.addpiecestart = -10;
-            curObj.inptype = "";
 
         }
 
         // console.log("ads" + mainContent.selectionStart + " " + mainContent.selectionEnd + document.getSelection());
     }
     else if (curObj && e.keyCode == 13 && !e.ctrlKey && !e.altKey) {
+        if (curObj.inptype != 'insert')
+            addpiece();
         if (curObj.addpiecestart == -10)
             curObj.addpiecestart = mainContent.selectionStart;
         curObj.piecestring.push('\n');
-        curObj.inptype = e.inputType;
+        curObj.inptype = "insert";
         curObj.lenofpiece++;
         var numnewline = document.getSelection().toString();
         incrementrow(1);
@@ -183,11 +190,13 @@ function keydownlistner(e) {
 
 function insertlistner(e) {
     if (curObj) {
-        if (e.inputType.match(/insert/)) {
+        if (e.inputType.match(/insert/) && e.data != null) {
+            if (curObj.inptype != 'insert')
+                addpiece();
             if (curObj.addpiecestart == -10)
                 curObj.addpiecestart = mainContent.selectionStart - 1;
             curObj.piecestring.push(e.data);
-            curObj.inptype = e.inputType;
+            curObj.inptype = "insert";
             curObj.lenofpiece++;
         }
 
@@ -210,20 +219,16 @@ function insertlistner(e) {
 }
 
 function scrolllistner(e) {
-    console.log(mainContent.scrollTop + "*" + mainContent.scrollHeight);
+    // console.log(mainContent.scrollTop + "*" + mainContent.scrollHeight);
     rowcnt.scrollTo(0, mainContent.scrollTop);
 
 }
 
 function clicklistener() {
-    console.log(Math.min(mainContent.selectionStart, mainContent.selectionEnd) == curObj.addpiecestart + curObj.lenofpiece);
+    // console.log(Math.min(mainContent.selectionStart, mainContent.selectionEnd) == curObj.addpiecestart + curObj.lenofpiece);
     if (Math.min(mainContent.selectionStart, mainContent.selectionEnd) != curObj.addpiecestart + curObj.lenofpiece) {
         if (curObj.piecestring.length != 0)
             addpiece();
-        curObj.piecestring = [];
-        curObj.lenofpiece = 0;
-        curObj.addpiecestart = -10;
-        curObj.inptype = "";
     }
 }
 
@@ -260,18 +265,14 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     if (curObj.isSaved === false) {
         titleofcurobj.innerHTML = newtitle;
         document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deletetab("' + newtitle + '") style="float:right;">&#10005;</span>';
-        console.log(newtitle);
+        // console.log(newtitle);
     }
     addpiece();
-    curObj.piecestring = [];
-    curObj.lenofpiece = 0;
-    curObj.addpiecestart = -10;
-    curObj.inptype = "";
     curObj.saveTheFile();
 });
 
 ipcRenderer.on('UNDO_NEEDED', function (event, arg) {
-    console.log('UNDO_NEEDED')
+    // console.log('UNDO_NEEDED')
     if (curObj) {
         curObj.pieceTable.applyUndo();
         setCurText();
@@ -279,19 +280,19 @@ ipcRenderer.on('UNDO_NEEDED', function (event, arg) {
 });
 
 ipcRenderer.on('REDO_NEEDED', function (event, arg) {
-    console.log('REDO_NEEDED')
+    // console.log('REDO_NEEDED')
     if (curObj) {
         curObj.pieceTable.applyRedo();
         setCurText();
     }
 });
 
-function setCurText(){
+function setCurText() {
     let ms = [];
     let piece = curObj.pieceTable.pieceHead;
     while (piece) {
         let length = piece.end - piece.start + 1;
-        for(let i=piece.start;i<=piece.end;i++){
+        for (let i = piece.start; i <= piece.end; i++) {
             ms.push(curObj.pieceTable.buffers[piece.bufferIndex][i]);
         }
         piece = piece.next;
@@ -309,10 +310,6 @@ function setCurText(){
     document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deletetab("' + newtitle + '") style="float:right;">&#10005;</span>';
     // console.log(newtitle);
     curObj.isSaved = false;
-    curObj.piecestring = [];
-    curObj.lenofpiece = 0;
-    curObj.addpiecestart = -10;
-    curObj.inptype = "";
 }
 
 // function save_(currentFileObject) {
