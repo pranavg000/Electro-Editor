@@ -1,6 +1,5 @@
 const remote = require('electron').remote
 const { dialog } = remote;
-var path = require('path');
 
 const win = remote.getCurrentWindow();
 var rowcnt;
@@ -55,22 +54,23 @@ const ipcRenderer = require('electron').ipcRenderer
 // const path = require('path')
 // const { readTitles } = require(path.resolve('actions/uiActions'))
 
-const readTitles = function (dataURL) {
-    let titles = []
-    fs.readdirSync(dataURL).forEach((file, i) => {
-        if (file.split('.').length == 2) {
-            titles.push({
-                title: `${file}`,
-                dir: `${dataURL}/${file}`
-            })
-        }
-    })
-    return titles
-}
+// const readTitles = function (dataURL) {
+//     let titles = []
+//     fs.readdirSync(dataURL).forEach((file, i) => {
+//         if (file.split('.').length == 2) {
+//             titles.push({
+//                 title: `${file}`,
+//                 dir: `${dataURL}/${file}`
+//             })
+//         }
+//     })
+//     return titles
+// }
 function walkSync(currentDirPath, folderEl) {
-    console.log("walk", currentDirPath, folderEl);
+    // console.log("walk", currentDirPath, folderEl);
     fs.readdirSync(currentDirPath).forEach(function (name) {
-        var filePath = path.join(currentDirPath, name);
+        // var filePath = path.join(currentDirPath, name);
+        var filePath = currentDirPath + "/" + name;
         var stat = fs.statSync(filePath);
         let el = document.createElement("li");
         let text = document.createTextNode(name);
@@ -96,20 +96,20 @@ function walkSync(currentDirPath, folderEl) {
                     incrementrow(lines.length);
                 }
             })
-            console.log(filePath, name);
-            // callback(filePath, stat);
+
         } else if (stat.isDirectory()) {
             // Handle Folders
-            console.log()
             let sp = document.createElement("span");
             sp.className = "caret";
             sp.append(text);
+            el.className = "folder";
             el.appendChild(sp);
             let ulist = document.createElement("ul");
             ulist.className = "nested";
             el.appendChild(ulist);
+            el.setAttribute("id", filePath);
+
             walkSync(filePath, ulist);
-            console.log(el);
         }
         folderEl.appendChild(el);
 
@@ -142,10 +142,8 @@ walkSync('allfiles', document.getElementById('titles'));
 // });
 
 function deleteTabSafe(fileKey) {
-    console.log(fileKey);
     let filetitle = openFiles[fileKey].fileName;
     if(filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
-    console.log(filetitle)
     if(openFiles[fileKey].isSaved){
         deletetab(fileKey);
     }
@@ -167,14 +165,11 @@ function deleteTabSafe(fileKey) {
         })
     }
     
-    // console.log(fileNFileObj + " " + Object.keys(fileNFileObj).length); 
 }
 
 function deletetab(fileKey){
     
     if (curObj.fullFilePath == fileKey) {
-        // console.log(fileNFileObj);
-        // console.log(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
         fixed = false;
         for(let key in openFiles){
             if(key != fileKey){
@@ -192,12 +187,9 @@ function deletetab(fileKey){
 }
 
 function settab(fileKey) {
-    console.log(fileKey);
     if (openFiles[fileKey]) {
         if (curObj) {
-            console.log(curObj, curObj.fullFilePath + "tabcontent");
             document.getElementById(curObj.fullFilePath + "tabcontent").style.display = "none";
-            // console.log(document.getElementById(curObj.fileName + "button").className);
             document.getElementById(curObj.fullFilePath + "button").className = document.getElementById(curObj.fullFilePath + "button").className.replace(" active", "");
             removelistners();
         }
@@ -213,17 +205,16 @@ function settab(fileKey) {
 
 function createtab(fileKey, isSaved=true) {
     let filetitle = openFiles[fileKey].fileName;
-    console.log("CT", fileKey);
     container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
     if(isSaved)
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey.toString() + '")>' + filetitle + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
     else
     tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
 
 }
 
 function keuplistner(e) {
-    console.log(rowcnt.childNodes.length);
+    // console.log(rowcnt.childNodes.length);
 }
 
 function keydownlistner(e) {
@@ -234,8 +225,6 @@ function keydownlistner(e) {
     if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey && mainContent.value.length >= mainContent.selectionStart) {
         if (curObj.lenofpiece != 0 && curObj.inptype != "delete") {
             addpiece();
-            // console.log("MahaPagal");
-            // console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
         }
         var numnewline = document.getSelection().toString();
 
@@ -255,7 +244,7 @@ function keydownlistner(e) {
                     curObj.addpiecestart = Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
                     curObj.lenofpiece++;
                 }
-                console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
+                // console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
                 // addpiece();
             }
 
@@ -315,13 +304,11 @@ function insertlistner(e) {
 }
 
 function scrolllistner(e) {
-    // console.log(mainContent.scrollTop + "*" + mainContent.scrollHeight);
     rowcnt.scrollTo(0, mainContent.scrollTop);
 
 }
 
 function clicklistener(e) {
-    // console.log(Math.min(mainContent.selectionStart, mainContent.selectionEnd) == curObj.addpiecestart + curObj.lenofpiece);
     if (Math.min(mainContent.selectionStart, mainContent.selectionEnd) != curObj.addpiecestart + curObj.lenofpiece) {
         if (curObj.piecestring.length != 0)
             addpiece();
@@ -386,7 +373,6 @@ ipcRenderer.on('REDO_NEEDED', function (event, arg) {
 });
 
 ipcRenderer.on('FIND', function (event, arg) {
-    // console.log('REDO_NEEDED')
     if (curObj) {
         document.getElementById("findbar").style.display = "inline";
         // const noti ={"title":"asv","body":"adsf"};
@@ -405,7 +391,6 @@ function setCurText() {
         }
         piece = piece.next;
     }
-    console.log(ms.join(''));
     settab(curObj.fullFilePath.toString());
     {
         mainContent.value = ms.join('');
@@ -416,7 +401,6 @@ function setCurText() {
     var newtitle = curObj.fileName.toString() + "*";
     titleofcurobj.innerHTML = newtitle;
     document.getElementById(curObj.fullFilePath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + curObj.fullFilePath + '") style="float:right;">&#10005;</span>';
-    // console.log(newtitle);
     curObj.isSaved = false;
 }
 var issearchtextchanged = 1;
@@ -468,7 +452,6 @@ function findbarsearch() {
 }
 
 function iseq(c1, c2) {
-    // console.log(c1.toString().toLowerCase() == c2.toString().toLowerCase());
     return c1.toString().toLowerCase() == c2.toString().toLowerCase();
 }
 
@@ -530,7 +513,6 @@ function backupOnClose() {
         openFiles[key] = "";
     }
     let jsonData = JSON.stringify(openFiles);
-    console.log(jsonData);
     fs.writeFile('.bak/main.json', jsonData, function (err) {
         if (err) console.log(err);
     })
@@ -542,9 +524,7 @@ function loadBackup() {
         if (exists) {
             fs.readFile(".bak/main.json", (err, jsonData) => {
                 if (err) return;
-                console.log(jsonData);
                 openFiles = JSON.parse(jsonData);
-                console.log(openFiles);
                 
                 for (const [key, value] of Object.entries(openFiles)) {
                     if(value)
@@ -556,7 +536,6 @@ function loadBackup() {
                     }
                     
                 }
-                console.log(openFiles);
 
                 setbackupdata();
             })
@@ -572,7 +551,6 @@ function setbackupdata() {
 
     for (var key in openFiles) {
         
-        // console.log(title);
         let obj = openFiles[key];
         let title = obj.fileName;
         createtab(key, obj.isSaved);
@@ -588,10 +566,6 @@ function setbackupdata() {
 }
 loadBackup();
 
-// iseq('A','A');
-// console.log(fileNFileObj)
-// setbackupdata();
-
 
 
 window.onbeforeunload = (e) => {
@@ -602,12 +576,7 @@ window.onbeforeunload = (e) => {
 let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 
 ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
-    // console.log("RECEIVED")
-    // if (textInputFormDiv.style.display === "none") {
-    //     textInputFormDiv.style.display = "block";
-    // } else {
-    //     textInputFormDiv.style.display = "none";
-    // }
+
 
     if (textInputFormDiv.style.display === "none") {
         textInputFormDiv.style.display = "block";
@@ -616,7 +585,7 @@ ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
 
 let textInputForm =  document.getElementById('bottom_footer_form');
 textInputForm.addEventListener('submit', function(e){
-    e.preventDefault()
+    e.preventDefault();
     let newFileName = document.getElementById("bottom_form_input").value;
     document.getElementById("bottom_form_input").value = "";
     let newFilePath = "allfiles/"+newFileName;
@@ -647,8 +616,6 @@ textInputForm.addEventListener('submit', function(e){
 
             textInputFormDiv.style.display = "none";
         }
-    }))
-    // write file here ?
-    console.log(newFileName)
+    }));
 })
 
