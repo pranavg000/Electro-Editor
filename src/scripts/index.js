@@ -300,6 +300,20 @@ function pastelistner(e) {
     console.log(mainContent.selectionStart);
 }
 
+function cutlistner(e) {
+    // console.log("JI");
+    console.log(document.getSelection().toString());
+    var numnewline1 = document.getSelection().toString();
+    if (numnewline1.length > 0) {
+        addpiece();
+        curObj.inptype = "delete";
+        decrementrow(numnewline1.split('\n').length - 1);
+        curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd)
+        curObj.addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
+        addpiece();
+    }
+
+}
 function createlistners() {
     mainContent.addEventListener('keyup', keuplistner);
 
@@ -313,6 +327,8 @@ function createlistners() {
     mainContent.addEventListener('click', clicklistener);
 
     mainContent.addEventListener('paste', pastelistner);
+
+    mainContent.addEventListener('cut', cutlistner);
 }
 function removelistners() {
     mainContent.removeEventListener('keyup', keuplistner);
@@ -328,6 +344,7 @@ function removelistners() {
 
     mainContent.removeEventListener('paste', pastelistner);
 
+    mainContent.removeEventListener('cut', cutlistner);
 }
 
 
