@@ -1,8 +1,8 @@
 const remote = require('electron').remote
 const { dialog } = remote;
+var path = require('path');
 
 const win = remote.getCurrentWindow();
-
 var rowcnt;
 var openFiles = {};
 var mainContent;
@@ -67,31 +67,79 @@ const readTitles = function (dataURL) {
     })
     return titles
 }
+function walkSync(currentDirPath, folderEl) {
+    console.log("walk", currentDirPath, folderEl);
+    fs.readdirSync(currentDirPath).forEach(function (name) {
+        var filePath = path.join(currentDirPath, name);
+        var stat = fs.statSync(filePath);
+        let el = document.createElement("li");
+        let text = document.createTextNode(name);
+        if (stat.isFile()) {
+            // Handle files 
+            // Handle Click
+            el.appendChild(text)
+            el.setAttribute("id", filePath);
+            el.addEventListener('click', function (e) { // clicking on sidebar names
+                var check = 0;
+                // if (curObj) curObj.fileData = Buffer(mainContent.value);
+                if (!openFiles[filePath]) {
+                    console.log(filePath, name);
+                    openFiles[filePath] = new FileObject(filePath, name);
+                    createtab(filePath);
+                    // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
+                    check = 1;
+                }
+                settab(filePath);
+                if (check == 1) {
+                    mainContent.value = curObj.pieceTable.buffers[0].toString();
+                    var lines = mainContent.value.split("\n");
+                    incrementrow(lines.length);
+                }
+            })
+            console.log(filePath, name);
+            // callback(filePath, stat);
+        } else if (stat.isDirectory()) {
+            // Handle Folders
+            console.log()
+            let sp = document.createElement("span");
+            sp.className = "caret";
+            sp.append(text);
+            el.appendChild(sp);
+            let ulist = document.createElement("ul");
+            ulist.className = "nested";
+            el.appendChild(ulist);
+            walkSync(filePath, ulist);
+            console.log(el);
+        }
+        folderEl.appendChild(el);
 
-readTitles('allfiles').map(({ title, dir }) => {
-    el = document.createElement("li");
-    text = document.createTextNode(`${title}`);
-    el.appendChild(text)
-    el.addEventListener('click', function (e) { // clicking on sidebar titles
-        var check = 0;
-        // if (curObj) curObj.fileData = Buffer(mainContent.value);
-        if (!openFiles[dir]) {
-            console.log(dir, title);
-            openFiles[dir] = new FileObject(dir, title);
-            createtab(dir);
-            // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
-            check = 1;
-        }
-        settab(dir);
-        if (check == 1) {
-            mainContent.value = curObj.pieceTable.buffers[0].toString();
-            var lines = mainContent.value.split("\n");
-            incrementrow(lines.length);
-        }
-    })
-    el.setAttribute("id", dir);
-    document.getElementById('titles').appendChild(el);
-});
+    });
+}
+walkSync('allfiles', document.getElementById('titles'));
+// readTitles('allfiles').map(({ title, dir }) => {
+//     el = document.createElement("li");
+//     text = document.createTextNode(`${title}`);
+//     el.appendChild(text)
+//     el.addEventListener('click', function (e) { // clicking on sidebar titles
+//         var check = 0;
+//         // if (curObj) curObj.fileData = Buffer(mainContent.value);
+//         if (!openFiles[dir]) {
+//             console.log(dir, title);
+//             openFiles[dir] = new FileObject(dir, title);
+//             createtab(dir);
+//             // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
+//             check = 1;
+//         }
+//         settab(dir);
+//         if (check == 1) {
+//             mainContent.value = curObj.pieceTable.buffers[0].toString();
+//             var lines = mainContent.value.split("\n");
+//             incrementrow(lines.length);
+//         }
+//     })
+//     el.setAttribute("id", dir);
+//     document.getElementById('titles').appendChild(el);
+// });
 
 function deleteTabSafe(fileKey) {
     console.log(fileKey);
@@ -144,7 +192,7 @@ function deletetab(fileKey){
 }
 
 function settab(fileKey) {
-    // console.log(filetitle, curObj);
+    console.log(fileKey);
     if (openFiles[fileKey]) {
         if (curObj) {
             console.log(curObj, curObj.fullFilePath + "tabcontent");
@@ -165,10 +213,10 @@ function settab(fileKey) {
 
 function createtab(fileKey, isSaved=true) {
     let filetitle = openFiles[fileKey].fileName;
-    console.log(fileKey);
+    console.log("CT", fileKey);
     container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
     if(isSaved)
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey.toString() + '")>' + filetitle + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
     else
     tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
 
