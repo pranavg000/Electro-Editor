@@ -109,6 +109,8 @@ function deleteTabSafe(filetitle) {
             else if(response === 2){
                 return;
             }
+            var titleofcurobj = document.getElementById(filetitle);
+            titleofcurobj.innerHTML = filetitle;
             deletetab(filetitle)
             // delete tempObj;
         })
