@@ -207,6 +207,7 @@ function keydownlistner(e) {
 
         }
         else {
+            curObj.inptype = "delete";
             decrementrow(numnewline.split('\n').length - 1);
             curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd)
             curObj.addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
