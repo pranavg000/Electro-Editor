@@ -9,11 +9,11 @@ var mainContent;
 var curObj = null;
 var container = document.getElementById("container");
 var tabcontainer = document.getElementById("tabcontainer");
-var deletePromptOptions  = {
+var deletePromptOptions = {
     type: "warning",
-    buttons: ["Yes","No","Cancel"],
+    buttons: ["Yes", "No", "Cancel"],
     message: "Do you want to Save the changes you made",
-    detail : "Your changes will be lost if you don't save them."
+    detail: "Your changes will be lost if you don't save them."
 }
 function addpiece() {
     console.log("*****");
@@ -93,46 +93,46 @@ readTitles('allfiles').map(({ title, dir }) => {
 });
 
 function deleteTabSafe(filetitle) {
-    if(filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
+    if (filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
     console.log(filetitle)
-    if(fileNFileObj[filetitle].isSaved){
+    if (fileNFileObj[filetitle].isSaved) {
         deletetab(filetitle);
     }
-    else{
+    else {
         deletePromptOptions.message = "Do you want to Save the changes you made to " + filetitle + "?";
         dialog.showMessageBox(win, deletePromptOptions).then(response => {
             response = response.response;
 
-            if(response === 0){
+            if (response === 0) {
                 saveFileObject(fileNFileObj[filetitle]);
             }
-            else if(response === 2){
+            else if (response === 2) {
                 return;
             }
             var titleofcurobj = document.getElementById(filetitle);
             titleofcurobj.innerHTML = filetitle;
-            deletetab(filetitle)
+            deletetab(filetitle);
             // delete tempObj;
         })
     }
-    
+
     // console.log(fileNFileObj + " " + Object.keys(fileNFileObj).length); 
 }
 
-function deletetab(filetitle){
-    
+function deletetab(filetitle) {
+    hide();
     if (curObj.fileName == filetitle) {
         // console.log(fileNFileObj);
         // console.log(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
         fixed = false;
-        for(let key in fileNFileObj){
-            if(key != filetitle){
+        for (let key in fileNFileObj) {
+            if (key != filetitle) {
                 settab(key);
                 fixed = true;
                 break;
             }
         }
-        if(!fixed) curObj = null;
+        if (!fixed) curObj = null;
     }
     document.getElementById(filetitle + "button").remove();
     document.getElementById(filetitle + "tabcontent").remove();
@@ -159,12 +159,12 @@ function settab(filetitle) {
     }
 }
 
-function createtab(filetitle, isSaved=true) {
+function createtab(filetitle, isSaved = true) {
     container.insertAdjacentHTML("beforeend", '<div id="' + filetitle + 'tabcontent" class="tabcontent"><div id="' + filetitle + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + filetitle + 'textarea" class="content"> </textarea></div>');
-    if(isSaved)
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '<span onclick=deleteTabSafe("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
+    if (isSaved)
+        tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '<span onclick=deleteTabSafe("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
     else
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + "*" + '<span onclick=deleteTabSafe("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
+        tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + "*" + '<span onclick=deleteTabSafe("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
 
 }
 
@@ -233,6 +233,7 @@ function keydownlistner(e) {
 function insertlistner(e) {
     if (curObj) {
         if (e.inputType.match(/insert/) && e.data != null) {
+            console.log("hhh");
             if (curObj.inptype != 'insert')
                 addpiece();
             if (curObj.addpiecestart == -10)
@@ -241,9 +242,18 @@ function insertlistner(e) {
             curObj.inptype = "insert";
             curObj.lenofpiece++;
         }
+        // else if (e.inputType.match(/insertFromPaste/)) {
+        //     let paste = (e.clipboardData || window.clipboardData).getData('text');
+        //     console.log("Paste:" + e.clipboardData);
 
+        //     setTimeout(function () {
+        //         // gets the copied text after a specified time (100 milliseconds)
+        //         var text = e.text;
+        //         console.log(text);
+        //     }, 100);
+        // }
+        // console.log(e.inputType + e.data);
 
-        // console.log(e);
         // console.log(mainContent.value[mainContent.selectionStart - 1], "F");
         if (curObj.isSaved) {
             // console.log("Unsaved");
@@ -274,6 +284,21 @@ function clicklistener(e) {
     }
 }
 
+function pastelistner(e) {
+    console.log(e.clipboardData.getData('text'));
+    let txt = e.clipboardData.getData('text');
+    if (txt.length > 0) {
+        addpiece();
+        curObj.addpiecestart = mainContent.selectionStart;
+        curObj.piecestring.push(txt);
+        curObj.inptype = "insert";
+        curObj.lenofpiece = txt.length;
+        incrementrow(txt.split('\n').length - 1);
+        addpiece();
+    }
+    console.log(mainContent.selectionStart);
+}
+
 function createlistners() {
     mainContent.addEventListener('keyup', keuplistner);
 
@@ -285,6 +310,8 @@ function createlistners() {
     mainContent.addEventListener('scroll', scrolllistner);
 
     mainContent.addEventListener('click', clicklistener);
+
+    mainContent.addEventListener('paste', pastelistner);
 }
 function removelistners() {
     mainContent.removeEventListener('keyup', keuplistner);
@@ -298,6 +325,8 @@ function removelistners() {
 
     mainContent.removeEventListener('click', clicklistener);
 
+    mainContent.removeEventListener('paste', pastelistner);
+
 }
 
 
@@ -305,7 +334,7 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     saveFileObject(curObj);
 });
 
-function saveFileObject(obj){
+function saveFileObject(obj) {
     var titleofcurobj = document.getElementById(obj.fileName.toString());
     var newtitle = obj.fileName;
     if (obj.isSaved === false) {
@@ -393,7 +422,7 @@ function findbarsearch() {
             mainContent.select();
             // mainContent.setSelectionRange(Math.max(0,reqarray[searchidx]-50), Math.max(0,reqarray[searchidx]-50));
             // mainContent.focus();
-            mainContent.scrollTo(Math.max(0,reqarray[searchidx]-50),Math.max(0,reqarray[searchidx]-50));
+            mainContent.scrollTo(Math.max(0, reqarray[searchidx] - 50), Math.max(0, reqarray[searchidx] - 50));
             mainContent.setSelectionRange(reqarray[searchidx], reqarray[searchidx] + pattern.length);
             searchidx = (searchidx + 1) % reqarray.length;
         }
@@ -402,7 +431,7 @@ function findbarsearch() {
     else {
         if (reqarray.length != 0) {
             mainContent.select();
-            mainContent.scrollTo(Math.max(0,reqarray[searchidx]-50),Math.max(0,reqarray[searchidx]-50));
+            mainContent.scrollTo(Math.max(0, reqarray[searchidx] - 50), Math.max(0, reqarray[searchidx] - 50));
             mainContent.setSelectionRange(reqarray[searchidx], reqarray[searchidx] + pattern.length);
             document.getElementById("findbar-text").innerHTML = (searchidx + 1) + "/" + reqarray.length;
             searchidx = (searchidx + 1) % reqarray.length;
@@ -465,14 +494,16 @@ function findtext(pattern) {
 
 function hide() {
     document.getElementById("findbar").style.display = "none";
+    document.getElementById("searchbar").value = "";
+    document.getElementById("findbar-text").innerHTML = "No Results";
 }
 
 function backupOnClose() {
     for (const key in fileNFileObj) {
-        if(!fileNFileObj[key].isSaved)
-        fileNFileObj[key].reset();
+        if (!fileNFileObj[key].isSaved)
+            fileNFileObj[key].reset();
         else
-        fileNFileObj[key] = fileNFileObj[key].fullFilePath;
+            fileNFileObj[key] = fileNFileObj[key].fullFilePath;
     }
     let jsonData = JSON.stringify(fileNFileObj);
     console.log(jsonData);
@@ -490,12 +521,12 @@ function loadBackup() {
                 console.log(jsonData);
                 fileNFileObj = JSON.parse(jsonData);
                 console.log(fileNFileObj);
-                
+
                 for (const [key, value] of Object.entries(fileNFileObj)) {
-                    if(typeof value === 'object')
-                    fileNFileObj[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                    if (typeof value === 'object')
+                        fileNFileObj[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
                     else
-                    fileNFileObj[key] = new FileObject(value, key);
+                        fileNFileObj[key] = new FileObject(value, key);
                 }
                 console.log(fileNFileObj);
 
@@ -518,7 +549,7 @@ function setbackupdata() {
         createtab(title, obj.isSaved);
         obj.nodenumber = tabcontainer.childNodes.length - 1;
         settab(title);
-        if(!obj.isSaved){
+        if (!obj.isSaved) {
             document.getElementById(curObj.fileName.toString()).innerHTML = title + "*";
         }
         mainContent.value = curObj.pieceTable.buffers[0].toString();
@@ -541,7 +572,7 @@ window.onbeforeunload = (e) => {
 
 let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 
-ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
+ipcRenderer.on('NEW_FILE_NEEDED', function (event, arg) {
     // console.log("RECEIVED")
     // if (textInputFormDiv.style.display === "none") {
     //     textInputFormDiv.style.display = "block";
@@ -554,14 +585,14 @@ ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
     }
 })
 
-let textInputForm =  document.getElementById('bottom_footer_form');
-textInputForm.addEventListener('submit', function(e){
+let textInputForm = document.getElementById('bottom_footer_form');
+textInputForm.addEventListener('submit', function (e) {
     e.preventDefault()
     let newFileName = document.getElementById("bottom_form_input").value;
     document.getElementById("bottom_form_input").value = "";
-    let newFilePath = "allfiles/"+newFileName;
-    if(fs.exists(newFilePath, (exists)=>{
-        if(!exists){
+    let newFilePath = "allfiles/" + newFileName;
+    if (fs.exists(newFilePath, (exists) => {
+        if (!exists) {
             fs.closeSync(fs.openSync(newFilePath, 'w'));
             el = document.createElement("li");
             text = document.createTextNode(newFileName);
@@ -588,7 +619,7 @@ textInputForm.addEventListener('submit', function(e){
             textInputFormDiv.style.display = "none";
         }
     }))
-    // write file here ?
-    console.log(newFileName)
+        // write file here ?
+        console.log(newFileName)
 })
 
