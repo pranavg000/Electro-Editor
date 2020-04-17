@@ -441,18 +441,19 @@ document.getElementById("searchbar").addEventListener('input', function def(e) {
 function replace_all() {
     let replacetxt = document.getElementById("replacesearchbar").value;
     let pattern = document.getElementById("searchbar").value;
-    let off = 0;
+    var off = 0;
     if (issearchtextchanged == 0 && reqarray.length > 0 && replacetxt != pattern) {
         makeunsaved();
         addpiece();
         for (var i = 0; i < reqarray.length; i++) {
-            reqarray[i] += off;
+            reqarray[i] = reqarray[i] + off;
             // mainContent.select();
             // mainContent.scrollTo(Math.max(0, reqarray[i] - 50), Math.max(0, reqarray[i] - 50));
             // mainContent.setSelectionRange(reqarray[i], reqarray[i] + pattern.length);
             curObj.inptype = "delete";
             curObj.lenofpiece = Math.abs(pattern.length)
             curObj.addpiecestart = Math.min(reqarray[i], reqarray[i] + pattern.length);
+            console.log("IMP**************" + reqarray[i]);
             addpiece();
             curObj.addpiecestart = reqarray[i];
             curObj.piecestring.push(replacetxt);
@@ -460,7 +461,7 @@ function replace_all() {
             curObj.lenofpiece = replacetxt.length;
             addpiece();
             mainContent.setRangeText(replacetxt, reqarray[i], reqarray[i] + pattern.length);
-            off += replacetxt.length - pattern.length;
+            off = off + replacetxt.length - pattern.length;
         }
         issearchtextchanged = 1;
         reqarray = [];
