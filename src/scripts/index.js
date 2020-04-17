@@ -8,11 +8,11 @@ var mainContent;
 var curObj = null;
 var container = document.getElementById("container");
 var tabcontainer = document.getElementById("tabcontainer");
-var deletePromptOptions  = {
+var deletePromptOptions = {
     type: "warning",
-    buttons: ["Yes","No","Cancel"],
+    buttons: ["Yes", "No", "Cancel"],
     message: "Do you want to Save the changes you made",
-    detail : "Your changes will be lost if you don't save them."
+    detail: "Your changes will be lost if you don't save them."
 }
 function addpiece() {
     console.log("*****");
@@ -138,8 +138,9 @@ function deleteTabSafe(fileKey) {
     if(filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
     if(openFiles[fileKey].isSaved){
         deletetab(fileKey);
+
     }
-    else{
+    else {
         deletePromptOptions.message = "Do you want to Save the changes you made to " + filetitle + "?";
         dialog.showMessageBox(win, deletePromptOptions).then(response => {
             response = response.response;
@@ -147,7 +148,7 @@ function deleteTabSafe(fileKey) {
             if(response === 0){
                 saveFileObject(openFiles[fileKey]);
             }
-            else if(response === 2){
+            else if (response === 2) {
                 return;
             }
             var titleofcurobj = document.getElementById(fileKey);
@@ -170,7 +171,7 @@ function deletetab(fileKey){
                 break;
             }
         }
-        if(!fixed) curObj = null;
+        if (!fixed) curObj = null;
     }
     document.getElementById(fileKey + "button").remove();
     document.getElementById(fileKey + "tabcontent").remove();
@@ -202,6 +203,7 @@ function createtab(fileKey, isSaved=true) {
     tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
     else
     tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+
 
 }
 
@@ -242,6 +244,7 @@ function keydownlistner(e) {
 
         }
         else {
+            curObj.inptype = "delete";
             decrementrow(numnewline.split('\n').length - 1);
             curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd)
             curObj.addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
@@ -267,7 +270,9 @@ function keydownlistner(e) {
 
 function insertlistner(e) {
     if (curObj) {
+        console.log("IIII");
         if (e.inputType.match(/insert/) && e.data != null) {
+            console.log("hhh");
             if (curObj.inptype != 'insert')
                 addpiece();
             if (curObj.addpiecestart == -10)
@@ -276,9 +281,18 @@ function insertlistner(e) {
             curObj.inptype = "insert";
             curObj.lenofpiece++;
         }
+        // else if (e.inputType.match(/insertFromPaste/)) {
+        //     let paste = (e.clipboardData || window.clipboardData).getData('text');
+        //     console.log("Paste:" + e.clipboardData);
 
+        //     setTimeout(function () {
+        //         // gets the copied text after a specified time (100 milliseconds)
+        //         var text = e.text;
+        //         console.log(text);
+        //     }, 100);
+        // }
+        // console.log(e.inputType + e.data);
 
-        // console.log(e);
         // console.log(mainContent.value[mainContent.selectionStart - 1], "F");
         if (curObj.isSaved) {
             // console.log("Unsaved");
@@ -290,9 +304,24 @@ function insertlistner(e) {
             // console.log(newtitle);
             curObj.isSaved = false;
         }
+//         makeunsaved();
+
 
     }
 
+}
+
+function makeunsaved() {
+    if (curObj.isSaved) {
+        // console.log("Unsaved");
+        curObj.fileName.toString();
+        var titleofcurobj = document.getElementById(curObj.fileName.toString());
+        var newtitle = curObj.fileName.toString() + "*";
+        titleofcurobj.innerHTML = newtitle;
+        document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
+        // console.log(newtitle);
+        curObj.isSaved = false;
+    }
 }
 
 function scrolllistner(e) {
@@ -307,6 +336,35 @@ function clicklistener(e) {
     }
 }
 
+function pastelistner(e) {
+    console.log(e.clipboardData.getData('text'));
+    let txt = e.clipboardData.getData('text');
+    if (txt.length > 0) {
+        addpiece();
+        curObj.addpiecestart = mainContent.selectionStart;
+        curObj.piecestring.push(txt);
+        curObj.inptype = "insert";
+        curObj.lenofpiece = txt.length;
+        incrementrow(txt.split('\n').length - 1);
+        addpiece();
+    }
+    console.log(mainContent.selectionStart);
+}
+
+function cutlistner(e) {
+    // console.log("JI");
+    console.log(document.getSelection().toString());
+    var numnewline1 = document.getSelection().toString();
+    if (numnewline1.length > 0) {
+        addpiece();
+        curObj.inptype = "delete";
+        decrementrow(numnewline1.split('\n').length - 1);
+        curObj.lenofpiece = Math.abs(mainContent.selectionStart - mainContent.selectionEnd)
+        curObj.addpiecestart = Math.min(mainContent.selectionStart, mainContent.selectionEnd);
+        addpiece();
+    }
+
+}
 function createlistners() {
     mainContent.addEventListener('keyup', keuplistner);
 
@@ -318,6 +376,10 @@ function createlistners() {
     mainContent.addEventListener('scroll', scrolllistner);
 
     mainContent.addEventListener('click', clicklistener);
+
+    mainContent.addEventListener('paste', pastelistner);
+
+    mainContent.addEventListener('cut', cutlistner);
 }
 function removelistners() {
     mainContent.removeEventListener('keyup', keuplistner);
@@ -331,6 +393,9 @@ function removelistners() {
 
     mainContent.removeEventListener('click', clicklistener);
 
+    mainContent.removeEventListener('paste', pastelistner);
+
+    mainContent.removeEventListener('cut', cutlistner);
 }
 
 
@@ -367,6 +432,8 @@ ipcRenderer.on('REDO_NEEDED', function (event, arg) {
 ipcRenderer.on('FIND', function (event, arg) {
     if (curObj) {
         document.getElementById("findbar").style.display = "inline";
+        document.getElementById("replacebar").style.display = "inline";
+
         // const noti ={"title":"asv","body":"adsf"};
         // const find = new window.Notification("abs",noti);
         // const find1 =new window.HTMLDialogElement;
@@ -408,10 +475,44 @@ var reqarray = [];
 
 document.getElementById("searchbar").addEventListener('input', function def(e) {
     issearchtextchanged = 1;
+    reqarray = [];
+    searchidx = 0;
     document.getElementById("findbar-text").innerHTML = "No Results";
 
 });
 
+
+function replace_all() {
+    let replacetxt = document.getElementById("replacesearchbar").value;
+    let pattern = document.getElementById("searchbar").value;
+    var off = 0;
+    if (issearchtextchanged == 0 && reqarray.length > 0 && replacetxt != pattern) {
+        makeunsaved();
+        addpiece();
+        for (var i = 0; i < reqarray.length; i++) {
+            reqarray[i] = reqarray[i] + off;
+            // mainContent.select();
+            // mainContent.scrollTo(Math.max(0, reqarray[i] - 50), Math.max(0, reqarray[i] - 50));
+            // mainContent.setSelectionRange(reqarray[i], reqarray[i] + pattern.length);
+            curObj.inptype = "delete";
+            curObj.lenofpiece = Math.abs(pattern.length)
+            curObj.addpiecestart = Math.min(reqarray[i], reqarray[i] + pattern.length);
+            console.log("IMP**************" + reqarray[i]);
+            addpiece();
+            curObj.addpiecestart = reqarray[i];
+            curObj.piecestring.push(replacetxt);
+            curObj.inptype = "insert";
+            curObj.lenofpiece = replacetxt.length;
+            addpiece();
+            mainContent.setRangeText(replacetxt, reqarray[i], reqarray[i] + pattern.length);
+            off = off + replacetxt.length - pattern.length;
+        }
+        issearchtextchanged = 1;
+        reqarray = [];
+        searchidx = 0;
+        document.getElementById("findbar-text").innerHTML = "No Results";
+    }
+}
 
 function findbarsearch() {
     let pattern = document.getElementById("searchbar").value;
@@ -424,7 +525,7 @@ function findbarsearch() {
             mainContent.select();
             // mainContent.setSelectionRange(Math.max(0,reqarray[searchidx]-50), Math.max(0,reqarray[searchidx]-50));
             // mainContent.focus();
-            mainContent.scrollTo(Math.max(0,reqarray[searchidx]-50),Math.max(0,reqarray[searchidx]-50));
+            mainContent.scrollTo(Math.max(0, reqarray[searchidx] - 50), Math.max(0, reqarray[searchidx] - 50));
             mainContent.setSelectionRange(reqarray[searchidx], reqarray[searchidx] + pattern.length);
             searchidx = (searchidx + 1) % reqarray.length;
         }
@@ -433,7 +534,7 @@ function findbarsearch() {
     else {
         if (reqarray.length != 0) {
             mainContent.select();
-            mainContent.scrollTo(Math.max(0,reqarray[searchidx]-50),Math.max(0,reqarray[searchidx]-50));
+            mainContent.scrollTo(Math.max(0, reqarray[searchidx] - 50), Math.max(0, reqarray[searchidx] - 50));
             mainContent.setSelectionRange(reqarray[searchidx], reqarray[searchidx] + pattern.length);
             document.getElementById("findbar-text").innerHTML = (searchidx + 1) + "/" + reqarray.length;
             searchidx = (searchidx + 1) % reqarray.length;
@@ -495,6 +596,10 @@ function findtext(pattern) {
 
 function hide() {
     document.getElementById("findbar").style.display = "none";
+    document.getElementById("searchbar").value = "";
+    document.getElementById("replacebar").style.display = "none";
+    document.getElementById("replacesearchbar").value = "";
+    document.getElementById("findbar-text").innerHTML = "No Results";
 }
 
 function backupOnClose() {
@@ -503,6 +608,7 @@ function backupOnClose() {
         openFiles[key].reset();
         else
         openFiles[key] = "";
+
     }
     let jsonData = JSON.stringify(openFiles);
     fs.writeFile('.bak/main.json', jsonData, function (err) {
@@ -527,6 +633,7 @@ function loadBackup() {
                         openFiles[key] = new FileObject(fullFilePath, fileName);
                     }
                     
+
                 }
 
                 setbackupdata();
@@ -550,6 +657,7 @@ function setbackupdata() {
         settab(key);
         if(!obj.isSaved){
             document.getElementById(curObj.fullFilePath.toString()).innerHTML = title + "*";
+
         }
         mainContent.value = curObj.pieceTable.buffers[0].toString();
         var lines = mainContent.value.split("\n");
@@ -570,6 +678,7 @@ let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
 
 
+
     if (textInputFormDiv.style.display === "none") {
         textInputFormDiv.style.display = "block";
     }
@@ -578,11 +687,12 @@ ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
 let textInputForm =  document.getElementById('bottom_footer_form');
 textInputForm.addEventListener('submit', function(e){
     e.preventDefault();
+
     let newFileName = document.getElementById("bottom_form_input").value;
     document.getElementById("bottom_form_input").value = "";
-    let newFilePath = "allfiles/"+newFileName;
-    if(fs.exists(newFilePath, (exists)=>{
-        if(!exists){
+    let newFilePath = "allfiles/" + newFileName;
+    if (fs.exists(newFilePath, (exists) => {
+        if (!exists) {
             fs.closeSync(fs.openSync(newFilePath, 'w'));
             el = document.createElement("li");
             text = document.createTextNode(newFileName);
@@ -609,5 +719,6 @@ textInputForm.addEventListener('submit', function(e){
             textInputFormDiv.style.display = "none";
         }
     }));
+
 })
 
