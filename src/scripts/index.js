@@ -51,22 +51,7 @@ function decrementrow(v) {
         rowcnt.removeChild(rowcnt.childNodes[rowcnt.childNodes.length - 1]);
 }
 const ipcRenderer = require('electron').ipcRenderer
-// const fs = require('fs')
-// const path = require('path')
-// const { readTitles } = require(path.resolve('actions/uiActions'))
 
-// const readTitles = function (dataURL) {
-//     let titles = []
-//     fs.readdirSync(dataURL).forEach((file, i) => {
-//         if (file.split('.').length == 2) {
-//             titles.push({
-//                 title: `${file}`,
-//                 dir: `${dataURL}/${file}`
-//             })
-//         }
-//     })
-//     return titles
-// }
 const ctxMenu = new Menu();
 ctxMenu.append(new MenuItem({
     label: 'New File',
@@ -91,72 +76,19 @@ function addContextMenu(folderEl){
 }
 
 function walkSync(currentDirPath, folderEl) {
-    // console.log("walk", currentDirPath, folderEl);
-    fs.readdirSync(currentDirPath).forEach(function (name) {
-        // var filePath = path.join(currentDirPath, name);
-        var filePath = currentDirPath + "/" + name;
+    fs.readdirSync(currentDirPath).forEach(function (fileName) {
+        var filePath = currentDirPath + "/" + fileName;
         var stat = fs.statSync(filePath);
-        let el = document.createElement("li");
-        let text = document.createTextNode(name);
         if (stat.isFile()) {
-            // Handle files 
-            // Handle Click
-            el.appendChild(text)
-            el.setAttribute("id", filePath);
-            el.addEventListener('click', function (e) { // clicking on sidebar names
-                var check = 0;
-                // if (curObj) curObj.fileData = Buffer(mainContent.value);
-                if (!openFiles[filePath]) {
-                    console.log(filePath, name);
-                    openFiles[filePath] = new FileObject(filePath, name);
-                    createtab(filePath);
-                    // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
-                    check = 1;
-                }
-                settab(filePath);
-                if (check == 1) {
-                    mainContent.value = curObj.pieceTable.buffers[0].toString();
-                    // console.log(curObj.pieceTable.buffers[0].toString().length);
-                    var lines = mainContent.value.split("\n");
-                    incrementrow(lines.length);
-                }
-            })
-
-        } else if (stat.isDirectory()) {
-            // Handle Folders
-            let sp = document.createElement("span");
-            sp.className = "caret";
-            sp.append(text);
-            el.className = "folder";
-            el.appendChild(sp);
-            let ulist = document.createElement("ul");
-            ulist.setAttribute("id", filePath + "ul");
-            ulist.className = "nested";
-            el.appendChild(ulist);
-            el.setAttribute("id", filePath);
-            addContextMenu(sp);
-            walkSync(filePath, ulist);
+            handleFileSideBar(filePath, fileName, folderEl);
+        } else if (stat.isDirectory()) {           
+            walkSync(filePath, handleFolderSideBar(filePath, fileName, folderEl));
         }
-        folderEl.appendChild(el);
 
     });
 }
 function displayFolder(folderPath) {
-    var el = document.createElement("li");
-    let text = document.createTextNode(folderPath.replace(/^.*[\\\/]/, ''));
-    let sp = document.createElement("span");
-    sp.className = "caret";
-    sp.append(text);
-    el.className = "folder";
-    el.appendChild(sp);
-    let ulist = document.createElement("ul");
-    ulist.setAttribute("id", folderPath + "ul");
-    ulist.className = "nested";
-    el.appendChild(ulist);
-    el.setAttribute("id", folderPath);
-    addContextMenu(sp);
-    document.getElementById('titles').appendChild(el);
-    walkSync(folderPath, ulist);
+    walkSync(folderPath, handleFolderSideBar(folderPath, folderPath.replace(/^.*[\\\/]/, ''), document.getElementById('titles')));
 }
 displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
 
@@ -182,7 +114,6 @@ function deleteTabSafe(fileKey) {
             var titleofcurobj = document.getElementById(fileKey);
             titleofcurobj.innerHTML = filetitle;
             deletetab(fileKey)
-            // delete tempObj;
         })
     }
 
@@ -715,10 +646,7 @@ ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
     displayTextInputForm("file"); 
 })
 
-<<<<<<< Updated upstream
-let textInputForm = document.getElementById('bottom_footer_form');
-textInputForm.addEventListener('submit', function (e) {
-=======
+
 function getFolderPath(fullFilePath){
     console.log(fullFilePath);
     for(let i=fullFilePath.length-1; i>=0; i--){
@@ -731,7 +659,6 @@ function getFolderPath(fullFilePath){
 
 let textInputForm =  document.getElementById('bottom_footer_form');
 textInputForm.addEventListener('submit', function(e){
->>>>>>> Stashed changes
     e.preventDefault();
 
     let newFileName = document.getElementById("bottom_form_input").value;
@@ -740,102 +667,78 @@ textInputForm.addEventListener('submit', function(e){
     let newFilePath = newFolderPath + "/" + newFileName;
     if(newFolderPath){
         if (!fs.existsSync(newFilePath)) {
-            let el = document.createElement("li");
-            let text = document.createTextNode(newFileName);
             if (newFType === "file") {
-                // Handle files 
-                // Handle Click
                 fs.closeSync(fs.openSync(newFilePath, 'w'));
-                el.appendChild(text)
-                el.setAttribute("id", newFilePath);
-    
-                el.addEventListener('click', function (e) { // clicking on sidebar names
-                    var check = 0;
-                    // if (curObj) curObj.fileData = Buffer(mainContent.value);
-                    if (!openFiles[newFilePath]) {
-                        console.log(newFilePath, newFileName);
-                        openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
-                        createtab(newFilePath);
-                        // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
-                        check = 1;
-                    }
-                    settab(newFilePath);
-                    if (check == 1) {
-                        mainContent.value = curObj.pieceTable.buffers[0].toString();
-                        var lines = mainContent.value.split("\n");
-                        incrementrow(lines.length);
-                    }
-                })
-    
-            } else if (newFType === "folder") {
-                // Handle Folders
+                handleFileSideBar(newFilePath, newFileName, document.getElementById(newFolderPath + "ul"));
+            } 
+            else if (newFType === "folder") {
                 fs.mkdirSync(newFilePath);
-                let sp = document.createElement("span");
-                sp.className = "caret";
-                sp.addEventListener("click", function() {
-                    // console.log("CLICK", this, this.nextSibling);
-                    this.parentElement.querySelector(".nested").classList.toggle("active-tree");
-                    this.classList.toggle("caret-down");
-                    // console.log(this.nextSibling);
-                    this.nextSibling.style.paddingLeft = "20px";
-                  });
-                sp.append(text);
-                el.className = "folder";
-                el.appendChild(sp);
-                let ulist = document.createElement("ul");
-                ulist.setAttribute("id", newFilePath + "ul");
-                ulist.className = "nested";
-                el.appendChild(ulist);
-                el.setAttribute("id", newFilePath);
-                addContextMenu(sp);
+                handleFolderSideBar(newFilePath, newFileName, document.getElementById(newFolderPath + "ul"));    
             }
-                document.getElementById(newFolderPath + "ul").appendChild(el);
-            
-    
-            
-            }
+        }
     }
     else if(newFType === "file") {
-        let newFilePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName, properties: ['openDirectory']});
+        let newFilePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName});
         newFilePath = newFilePath.replace(/\\/g,"/");
         fs.closeSync(fs.openSync(newFilePath, 'w'));
         console.log(newFilePath);
-        // console.log(savePath, newFileName);
-        // let newFileName = newFilePath.replace(/^.*[\\\/]/, '');
-        let el = document.createElement("li");
-        let text = document.createTextNode(newFileName);
-            
-                // Handle files 
-                // Handle Click
-                fs.closeSync(fs.openSync(newFilePath, 'w'));
-                el.appendChild(text)
-                el.setAttribute("id", newFilePath);
-    
-                el.addEventListener('click', function (e) { // clicking on sidebar names
-                    var check = 0;
-                    // if (curObj) curObj.fileData = Buffer(mainContent.value);
-                    if (!openFiles[newFilePath]) {
-                        console.log(newFilePath, newFileName);
-                        openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
-                        createtab(newFilePath);
-                        // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
-                        check = 1;
-                    }
-                    settab(newFilePath);
-                    if (check == 1) {
-                        mainContent.value = curObj.pieceTable.buffers[0].toString();
-                        var lines = mainContent.value.split("\n");
-                        incrementrow(lines.length);
-                    }
-                })
-                newFolderPath = getFolderPath(newFilePath);
-                console.log(newFolderPath);
-                document.getElementById(newFolderPath + "ul").appendChild(el);
-               
-        }
-        hideTextInputForm();
+        handleFileSideBar(newFilePath, newFileName, document.getElementById(getFolderPath(newFilePath) + "ul"));
+    }
+    hideTextInputForm();
 
 });
+
+function handleFolderSideBar(fullFolderPath, folderName, parentUL){
+    let el = document.createElement("li");
+    let text = document.createTextNode(folderName);
+    let sp = document.createElement("span");
+    sp.className = "caret";
+    sp.addEventListener("click", function() {
+        console.log("CLICK", this, this.nextSibling);
+        this.parentElement.querySelector(".nested").classList.toggle("active-tree");
+        this.classList.toggle("caret-down");
+        // console.log(this.nextSibling);
+        this.nextSibling.style.paddingLeft = "20px";
+        });
+    sp.append(text);
+    el.className = "folder";
+    el.appendChild(sp);
+    var ulist = document.createElement("ul");
+    ulist.setAttribute("id", fullFolderPath + "ul");
+    ulist.className = "nested";
+    el.appendChild(ulist);
+    el.setAttribute("id", fullFolderPath);
+    addContextMenu(sp);
+    parentUL.appendChild(el);
+    return ulist;
+}
+
+function handleFileSideBar(fullFilePath, fileName, parentUL){
+    let el = document.createElement("li");
+    let text = document.createTextNode(fileName);
+    el.appendChild(text)
+    el.setAttribute("id", fullFilePath);
+
+    el.addEventListener('click', function (e) { // clicking on sidebar names
+        var check = 0;
+        // if (curObj) curObj.fileData = Buffer(mainContent.value);
+        if (!openFiles[fullFilePath]) {
+            console.log(fullFilePath, fileName);
+            openFiles[fullFilePath] = new FileObject(fullFilePath, fileName);
+            createtab(fullFilePath);
+            // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
+            check = 1;
+        }
+        settab(fullFilePath);
+        if (check == 1) {
+            mainContent.value = curObj.pieceTable.buffers[0].toString();
+            var lines = mainContent.value.split("\n");
+            incrementrow(lines.length);
+        }
+    })
+    parentUL.appendChild(el);
+
+}
 
 
 

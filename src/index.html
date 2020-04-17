@@ -75,21 +75,7 @@
   <script src="scripts/FileObject.js"></script>
   <script src="scripts/charwisept/PieceTable.js"></script>
   <script src="scripts/index.js"></script>
-  <script>
-    var toggler = document.getElementsByClassName("caret");
-    var i;
-    
-    for (i = 0; i < toggler.length; i++) {
-      toggler[i].addEventListener("click", function() {
-        // console.log("CLICK", this, this.nextSibling);
-        this.parentElement.querySelector(".nested").classList.toggle("active-tree");
-        this.classList.toggle("caret-down");
-        // console.log(this.nextSibling);
-        this.nextSibling.style.paddingLeft = "20px";
-      });
-    }
-    
-    </script>
+
 </body>
 
 </html>
