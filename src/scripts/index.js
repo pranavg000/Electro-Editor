@@ -92,6 +92,7 @@ function walkSync(currentDirPath, folderEl) {
                 settab(filePath);
                 if (check == 1) {
                     mainContent.value = curObj.pieceTable.buffers[0].toString();
+                    // console.log(curObj.pieceTable.buffers[0].toString().length);
                     var lines = mainContent.value.split("\n");
                     incrementrow(lines.length);
                 }
@@ -115,7 +116,7 @@ function walkSync(currentDirPath, folderEl) {
 
     });
 }
-function displayFolder(folderPath){
+function displayFolder(folderPath) {
     var el = document.createElement("li");
     let text = document.createTextNode(folderPath.replace(/^.*[\\\/]/, ''));
     let sp = document.createElement("span");
@@ -135,8 +136,8 @@ displayFolder('allfiles'); // TODO : Open any folder
 
 function deleteTabSafe(fileKey) {
     let filetitle = openFiles[fileKey].fileName;
-    if(filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
-    if(openFiles[fileKey].isSaved){
+    if (filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
+    if (openFiles[fileKey].isSaved) {
         deletetab(fileKey);
 
     }
@@ -145,7 +146,7 @@ function deleteTabSafe(fileKey) {
         dialog.showMessageBox(win, deletePromptOptions).then(response => {
             response = response.response;
 
-            if(response === 0){
+            if (response === 0) {
                 saveFileObject(openFiles[fileKey]);
             }
             else if (response === 2) {
@@ -157,15 +158,15 @@ function deleteTabSafe(fileKey) {
             // delete tempObj;
         })
     }
-    
+
 }
 
-function deletetab(fileKey){
-    
+function deletetab(fileKey) {
+    hide();
     if (curObj.fullFilePath == fileKey) {
         fixed = false;
-        for(let key in openFiles){
-            if(key != fileKey){
+        for (let key in openFiles) {
+            if (key != fileKey) {
                 settab(key);
                 fixed = true;
                 break;
@@ -196,13 +197,13 @@ function settab(fileKey) {
     }
 }
 
-function createtab(fileKey, isSaved=true) {
+function createtab(fileKey, isSaved = true) {
     let filetitle = openFiles[fileKey].fileName;
     container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
-    if(isSaved)
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+    if (isSaved)
+        tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
     else
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+        tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
 
 
 }
@@ -270,9 +271,9 @@ function keydownlistner(e) {
 
 function insertlistner(e) {
     if (curObj) {
-        console.log("IIII");
+        // console.log("IIII");
         if (e.inputType.match(/insert/) && e.data != null) {
-            console.log("hhh");
+            // console.log("hhh");
             if (curObj.inptype != 'insert')
                 addpiece();
             if (curObj.addpiecestart == -10)
@@ -294,17 +295,8 @@ function insertlistner(e) {
         // console.log(e.inputType + e.data);
 
         // console.log(mainContent.value[mainContent.selectionStart - 1], "F");
-        if (curObj.isSaved) {
-            // console.log("Unsaved");
-            // curObj.fileName.toString();
-            var titleofcurobj = document.getElementById(curObj.fullFilePath.toString());
-            var newtitle = curObj.fileName.toString() + "*";
-            titleofcurobj.innerHTML = newtitle;
-            document.getElementById(curObj.fullFilePath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + curObj.fullFilePath + '") style="float:right;">&#10005;</span>';
-            // console.log(newtitle);
-            curObj.isSaved = false;
-        }
-//         makeunsaved();
+
+        makeunsaved();
 
 
     }
@@ -314,11 +306,11 @@ function insertlistner(e) {
 function makeunsaved() {
     if (curObj.isSaved) {
         // console.log("Unsaved");
-        curObj.fileName.toString();
-        var titleofcurobj = document.getElementById(curObj.fileName.toString());
+        console.log("IMP" + curObj.fullFilePath.toString());
+        var titleofcurobj = document.getElementById(curObj.fullFilePath.toString());
         var newtitle = curObj.fileName.toString() + "*";
         titleofcurobj.innerHTML = newtitle;
-        document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
+        document.getElementById(curObj.fullFilePath.toString() + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
         // console.log(newtitle);
         curObj.isSaved = false;
     }
@@ -403,7 +395,7 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     saveFileObject(curObj);
 });
 
-function saveFileObject(obj){
+function saveFileObject(obj) {
     var titleofcurobj = document.getElementById(obj.fullFilePath.toString());
     var newtitle = obj.fileName;
     var newPath = obj.fullFilePath;
@@ -604,10 +596,10 @@ function hide() {
 
 function backupOnClose() {
     for (const key in openFiles) {
-        if(!openFiles[key].isSaved)
-        openFiles[key].reset();
+        if (!openFiles[key].isSaved)
+            openFiles[key].reset();
         else
-        openFiles[key] = "";
+            openFiles[key] = "";
 
     }
     let jsonData = JSON.stringify(openFiles);
@@ -623,16 +615,16 @@ function loadBackup() {
             fs.readFile(".bak/main.json", (err, jsonData) => {
                 if (err) return;
                 openFiles = JSON.parse(jsonData);
-                
+
                 for (const [key, value] of Object.entries(openFiles)) {
-                    if(value)
-                    openFiles[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
-                    else{
+                    if (value)
+                        openFiles[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                    else {
                         fullFilePath = key;
                         fileName = key.replace(/^.*[\\\/]/, '');
                         openFiles[key] = new FileObject(fullFilePath, fileName);
                     }
-                    
+
 
                 }
 
@@ -649,13 +641,13 @@ function setbackupdata() {
     console.log(openFiles);
 
     for (var key in openFiles) {
-        
+
         let obj = openFiles[key];
         let title = obj.fileName;
         createtab(key, obj.isSaved);
         obj.nodenumber = tabcontainer.childNodes.length - 1;
         settab(key);
-        if(!obj.isSaved){
+        if (!obj.isSaved) {
             document.getElementById(curObj.fullFilePath.toString()).innerHTML = title + "*";
 
         }
@@ -675,7 +667,7 @@ window.onbeforeunload = (e) => {
 
 let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 
-ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
+ipcRenderer.on('NEW_FILE_NEEDED', function (event, arg) {
 
 
 
@@ -684,8 +676,8 @@ ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
     }
 })
 
-let textInputForm =  document.getElementById('bottom_footer_form');
-textInputForm.addEventListener('submit', function(e){
+let textInputForm = document.getElementById('bottom_footer_form');
+textInputForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
     let newFileName = document.getElementById("bottom_form_input").value;
