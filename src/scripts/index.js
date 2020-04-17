@@ -1,10 +1,11 @@
 const remote = require('electron').remote
-const { dialog } = remote;
+const { dialog, MenuItem, Menu } = remote;
 
 const win = remote.getCurrentWindow();
 var rowcnt;
 var openFiles = {};
 var mainContent;
+var rightClickTarget = null;
 var curObj = null;
 var container = document.getElementById("container");
 var tabcontainer = document.getElementById("tabcontainer");
@@ -66,6 +67,29 @@ const ipcRenderer = require('electron').ipcRenderer
 //     })
 //     return titles
 // }
+const ctxMenu = new Menu();
+ctxMenu.append(new MenuItem({
+    label: 'New File',
+    click: () => {
+        displayTextInputForm("file", rightClickTarget.id);
+        // console.log("HEllo");
+    }
+}));
+ctxMenu.append(new MenuItem({
+    label: 'New Folder',
+    click: () => {
+        displayTextInputForm("folder", rightClickTarget.id);
+    }
+}));
+function addContextMenu(folderEl){
+    folderEl.addEventListener('contextmenu', function(ev) {
+        ev.preventDefault();
+        rightClickTarget = ev.target.parentElement;
+        ctxMenu.popup(win);
+    }, false);
+    
+}
+
 function walkSync(currentDirPath, folderEl) {
     console.log("walk", currentDirPath, folderEl);
     fs.readdirSync(currentDirPath).forEach(function (name) {
@@ -106,10 +130,11 @@ function walkSync(currentDirPath, folderEl) {
             el.className = "folder";
             el.appendChild(sp);
             let ulist = document.createElement("ul");
+            ulist.setAttribute("id", filePath + "ul");
             ulist.className = "nested";
             el.appendChild(ulist);
             el.setAttribute("id", filePath);
-
+            addContextMenu(sp);
             walkSync(filePath, ulist);
         }
         folderEl.appendChild(el);
@@ -125,9 +150,11 @@ function displayFolder(folderPath) {
     el.className = "folder";
     el.appendChild(sp);
     let ulist = document.createElement("ul");
+    ulist.setAttribute("id", folderPath + "ul");
     ulist.className = "nested";
     el.appendChild(ulist);
     el.setAttribute("id", folderPath);
+    addContextMenu(sp);
     document.getElementById('titles').appendChild(el);
     walkSync(folderPath, ulist);
 }
@@ -667,13 +694,25 @@ window.onbeforeunload = (e) => {
 
 let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 
-ipcRenderer.on('NEW_FILE_NEEDED', function (event, arg) {
-
-
+function displayTextInputForm(ftype, folder=""){
+    console.log(ftype, folder);
 
     if (textInputFormDiv.style.display === "none") {
+        document.getElementById('bottom_form_input_folder').value = folder;
+        document.getElementById('bottom_form_input_ftype').value = ftype;
         textInputFormDiv.style.display = "block";
     }
+}
+
+function hideTextInputForm(){
+    if (textInputFormDiv.style.display === "block") {
+        document.getElementById("bottom_form_input").value = "";
+        textInputFormDiv.style.display = "none";
+    }
+}
+
+ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
+    displayTextInputForm("file"); 
 })
 
 let textInputForm = document.getElementById('bottom_footer_form');
@@ -681,36 +720,73 @@ textInputForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
     let newFileName = document.getElementById("bottom_form_input").value;
-    document.getElementById("bottom_form_input").value = "";
-    let newFilePath = "allfiles/" + newFileName;
-    if (fs.exists(newFilePath, (exists) => {
-        if (!exists) {
-            fs.closeSync(fs.openSync(newFilePath, 'w'));
-            el = document.createElement("li");
-            text = document.createTextNode(newFileName);
-            el.appendChild(text)
-            el.addEventListener('click', function (e) { // clicking on sidebar titles
-                var check = 0;
-                // if (curObj) curObj.fileData = Buffer(mainContent.value);
-                if (!openFiles[newFilePath]) {
-                    openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
-                    createtab(newFilePath);
-                    // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
-                    check = 1;
-                }
-                settab(newFilePath);
-                if (check == 1) {
-                    mainContent.value = curObj.pieceTable.buffers[0].toString();
-                    var lines = mainContent.value.split("\n");
-                    incrementrow(lines.length);
-                }
-            })
-            el.setAttribute("id", newFilePath);
-            document.getElementById('titles').appendChild(el);
+    let newFolderPath = document.getElementById("bottom_form_input_folder").value;
+    let newFType = document.getElementById("bottom_form_input_ftype").value;
+    let newFilePath = newFolderPath + "/" + newFileName;
+    if(newFolderPath){
+        if (!fs.existsSync(newFilePath)) {
+            let el = document.createElement("li");
+            let text = document.createTextNode(newFileName);
+            if (newFType === "file") {
+                // Handle files 
+                // Handle Click
+                fs.closeSync(fs.openSync(newFilePath, 'w'));
+                el.appendChild(text)
+                el.setAttribute("id", newFilePath);
+    
+                el.addEventListener('click', function (e) { // clicking on sidebar names
+                    var check = 0;
+                    // if (curObj) curObj.fileData = Buffer(mainContent.value);
+                    if (!openFiles[newFilePath]) {
+                        console.log(newFilePath, newFileName);
+                        openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
+                        createtab(newFilePath);
+                        // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
+                        check = 1;
+                    }
+                    settab(newFilePath);
+                    if (check == 1) {
+                        mainContent.value = curObj.pieceTable.buffers[0].toString();
+                        var lines = mainContent.value.split("\n");
+                        incrementrow(lines.length);
+                    }
+                })
+    
+            } else if (newFType === "folder") {
+                // Handle Folders
+                fs.mkdirSync(newFilePath);
+                let sp = document.createElement("span");
+                sp.className = "caret";
+                sp.addEventListener("click", function() {
+                    // console.log("CLICK", this, this.nextSibling);
+                    this.parentElement.querySelector(".nested").classList.toggle("active-tree");
+                    this.classList.toggle("caret-down");
+                    // console.log(this.nextSibling);
+                    this.nextSibling.style.paddingLeft = "20px";
+                  });
+                sp.append(text);
+                el.className = "folder";
+                el.appendChild(sp);
+                let ulist = document.createElement("ul");
+                ulist.setAttribute("id", newFilePath + "ul");
+                ulist.className = "nested";
+                el.appendChild(ulist);
+                el.setAttribute("id", newFilePath);
+                addContextMenu(sp);
+            }
+                document.getElementById(newFolderPath + "ul").appendChild(el);
+            
+    
+            hideTextInputForm();
+            }
+    }
+    else if(newFType === "file") {
+        let savePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName});
+        fs.closeSync(fs.openSync(savePath, 'w'));
+        // console.log(savePath, newFileName);
+    }
+    
+    });
 
-            textInputFormDiv.style.display = "none";
-        }
-    }));
 
-})
 
