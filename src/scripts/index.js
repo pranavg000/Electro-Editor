@@ -729,67 +729,69 @@ textInputForm.addEventListener('submit', function(e){
     let newFolderPath = document.getElementById("bottom_form_input_folder").value;
     let newFType = document.getElementById("bottom_form_input_ftype").value;
     let newFilePath = newFolderPath + "/" + newFileName;
-    if (!fs.existsSync(newFilePath)) {
-        let el = document.createElement("li");
-        let text = document.createTextNode(newFileName);
-        if (newFType === "file") {
-            // Handle files 
-            // Handle Click
-            fs.closeSync(fs.openSync(newFilePath, 'w'));
-            el.appendChild(text)
-            el.setAttribute("id", newFilePath);
-
-            el.addEventListener('click', function (e) { // clicking on sidebar names
-                var check = 0;
-                // if (curObj) curObj.fileData = Buffer(mainContent.value);
-                if (!openFiles[newFilePath]) {
-                    console.log(newFilePath, newFileName);
-                    openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
-                    createtab(newFilePath);
-                    // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
-                    check = 1;
-                }
-                settab(newFilePath);
-                if (check == 1) {
-                    mainContent.value = curObj.pieceTable.buffers[0].toString();
-                    var lines = mainContent.value.split("\n");
-                    incrementrow(lines.length);
-                }
-            })
-
-        } else if (newFType === "folder") {
-            // Handle Folders
-            fs.mkdirSync(newFilePath);
-            let sp = document.createElement("span");
-            sp.className = "caret";
-            sp.addEventListener("click", function() {
-                // console.log("CLICK", this, this.nextSibling);
-                this.parentElement.querySelector(".nested").classList.toggle("active-tree");
-                this.classList.toggle("caret-down");
-                // console.log(this.nextSibling);
-                this.nextSibling.style.paddingLeft = "20px";
-              });
-            sp.append(text);
-            el.className = "folder";
-            el.appendChild(sp);
-            let ulist = document.createElement("ul");
-            ulist.setAttribute("id", newFilePath + "ul");
-            ulist.className = "nested";
-            el.appendChild(ulist);
-            el.setAttribute("id", newFilePath);
-            addContextMenu(sp);
-        }
-        if(newFolderPath) {
-            document.getElementById(newFolderPath + "ul").appendChild(el);
-        }
-        else if(ftype === "file") {
-            let savePath = dialog.showSaveDialog({});
-            // fs.closeSync(fs.openSync(newFilePath, 'w'));
-            console.log(savePath);
-        }
-
-        hideTextInputForm();
-        }
+    if(newFolderPath){
+        if (!fs.existsSync(newFilePath)) {
+            let el = document.createElement("li");
+            let text = document.createTextNode(newFileName);
+            if (newFType === "file") {
+                // Handle files 
+                // Handle Click
+                fs.closeSync(fs.openSync(newFilePath, 'w'));
+                el.appendChild(text)
+                el.setAttribute("id", newFilePath);
+    
+                el.addEventListener('click', function (e) { // clicking on sidebar names
+                    var check = 0;
+                    // if (curObj) curObj.fileData = Buffer(mainContent.value);
+                    if (!openFiles[newFilePath]) {
+                        console.log(newFilePath, newFileName);
+                        openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
+                        createtab(newFilePath);
+                        // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
+                        check = 1;
+                    }
+                    settab(newFilePath);
+                    if (check == 1) {
+                        mainContent.value = curObj.pieceTable.buffers[0].toString();
+                        var lines = mainContent.value.split("\n");
+                        incrementrow(lines.length);
+                    }
+                })
+    
+            } else if (newFType === "folder") {
+                // Handle Folders
+                fs.mkdirSync(newFilePath);
+                let sp = document.createElement("span");
+                sp.className = "caret";
+                sp.addEventListener("click", function() {
+                    // console.log("CLICK", this, this.nextSibling);
+                    this.parentElement.querySelector(".nested").classList.toggle("active-tree");
+                    this.classList.toggle("caret-down");
+                    // console.log(this.nextSibling);
+                    this.nextSibling.style.paddingLeft = "20px";
+                  });
+                sp.append(text);
+                el.className = "folder";
+                el.appendChild(sp);
+                let ulist = document.createElement("ul");
+                ulist.setAttribute("id", newFilePath + "ul");
+                ulist.className = "nested";
+                el.appendChild(ulist);
+                el.setAttribute("id", newFilePath);
+                addContextMenu(sp);
+            }
+                document.getElementById(newFolderPath + "ul").appendChild(el);
+            
+    
+            hideTextInputForm();
+            }
+    }
+    else if(newFType === "file") {
+        let savePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName});
+        fs.closeSync(fs.openSync(savePath, 'w'));
+        // console.log(savePath, newFileName);
+    }
+    
     });
 
 
