@@ -67,7 +67,7 @@ const ipcRenderer = require('electron').ipcRenderer
 //     return titles
 // }
 function walkSync(currentDirPath, folderEl) {
-    // console.log("walk", currentDirPath, folderEl);
+    console.log("walk", currentDirPath, folderEl);
     fs.readdirSync(currentDirPath).forEach(function (name) {
         // var filePath = path.join(currentDirPath, name);
         var filePath = currentDirPath + "/" + name;
@@ -115,31 +115,23 @@ function walkSync(currentDirPath, folderEl) {
 
     });
 }
-walkSync('allfiles', document.getElementById('titles'));
-// readTitles('allfiles').map(({ title, dir }) => {
-//     el = document.createElement("li");
-//     text = document.createTextNode(`${title}`);
-//     el.appendChild(text)
-//     el.addEventListener('click', function (e) { // clicking on sidebar titles
-//         var check = 0;
-//         // if (curObj) curObj.fileData = Buffer(mainContent.value);
-//         if (!openFiles[dir]) {
-//             console.log(dir, title);
-//             openFiles[dir] = new FileObject(dir, title);
-//             createtab(dir);
-//             // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
-//             check = 1;
-//         }
-//         settab(dir);
-//         if (check == 1) {
-//             mainContent.value = curObj.pieceTable.buffers[0].toString();
-//             var lines = mainContent.value.split("\n");
-//             incrementrow(lines.length);
-//         }
-//     })
-//     el.setAttribute("id", dir);
-//     document.getElementById('titles').appendChild(el);
-// });
+function displayFolder(folderPath){
+    var el = document.createElement("li");
+    let text = document.createTextNode(folderPath.replace(/^.*[\\\/]/, ''));
+    let sp = document.createElement("span");
+    sp.className = "caret";
+    sp.append(text);
+    el.className = "folder";
+    el.appendChild(sp);
+    let ulist = document.createElement("ul");
+    ulist.className = "nested";
+    el.appendChild(ulist);
+    el.setAttribute("id", folderPath);
+    document.getElementById('titles').appendChild(el);
+    walkSync(folderPath, ulist);
+}
+displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
+
 
 function deleteTabSafe(fileKey) {
     let filetitle = openFiles[fileKey].fileName;
@@ -207,9 +199,9 @@ function createtab(fileKey, isSaved=true) {
     let filetitle = openFiles[fileKey].fileName;
     container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
     if(isSaved)
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
     else
-    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
 
 }
 

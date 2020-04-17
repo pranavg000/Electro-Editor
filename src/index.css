@@ -273,3 +273,8 @@ ul, #titles {
   #bottom_form_label {
     color: white;
   }
+
+  .cross-button {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
