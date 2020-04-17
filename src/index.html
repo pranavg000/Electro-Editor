@@ -5,14 +5,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Hello World!</title>
+  <title>Text Editor</title>
   <link rel="stylesheet" href="index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 </head>
 
 <body class="index">
-  <ul id="titles"></ul>
+  <div class="sidebar">
+  <ul id="titles">
+    <!-- <li><span class="caret">Beverages</span>
+      <ul class="nested">
+        <li>Water</li>
+        <li>Coffee</li>
+        <li><span class="caret">Tea</span>
+          <ul class="nested">
+            <li>Black Tea</li>
+            <li>White Tea</li>
+            <li><span class="caret">Green Tea</span>
+              <ul class="nested">
+                <li>Sencha</li>
+                <li>Gyokuro</li>
+                <li>Matcha</li>
+                <li>Pi Lo Chun</li>
+              </ul>
+            </li>
+          </ul>
+        </li>  
+      </ul>
+    </li>
+    <li>Coffee</li> -->
+  </ul>
+  </div>
   <div id="container">
     <!-- <span> -->
 
@@ -49,6 +73,21 @@
   <script src="scripts/FileObject.js"></script>
   <script src="scripts/charwisept/PieceTable.js"></script>
   <script src="scripts/index.js"></script>
+  <script>
+    var toggler = document.getElementsByClassName("caret");
+    var i;
+    
+    for (i = 0; i < toggler.length; i++) {
+      toggler[i].addEventListener("click", function() {
+        // console.log("CLICK", this, this.nextSibling);
+        this.parentElement.querySelector(".nested").classList.toggle("active-tree");
+        this.classList.toggle("caret-down");
+        // console.log(this.nextSibling);
+        this.nextSibling.style.paddingLeft = "20px";
+      });
+    }
+    
+    </script>
 </body>
 
 </html>

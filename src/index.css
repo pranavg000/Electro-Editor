@@ -58,7 +58,8 @@
     color: #50C68A;
   }
   
-  #titles li {
+  /****** PRANAV BEGIN********/
+  /* #titles li {
     margin: 15px 3px;
     display: inline-block;
     border-bottom: 1px solid var(--border-color);
@@ -66,8 +67,50 @@
     padding: 0;
     padding-bottom: 20px;
     cursor: pointer;
-  }
-  
+  } */
+ul, #titles {
+  list-style-type: none;
+}
+#titles {
+  margin: 0;
+  padding: 0;
+  padding-left: 10px;
+}
+
+#titles li {
+  cursor: pointer;
+}
+
+
+.caret {
+  cursor: pointer;
+  -webkit-user-select: none; /* Safari 3.1+ */
+  -moz-user-select: none; /* Firefox 2+ */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
+}
+
+.caret::before {
+  content: "\25B6";
+  color: #c7c7ca;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.caret-down::before {
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Safari */
+  transform: rotate(90deg);  
+}
+
+.nested {
+  display: none;
+}
+
+.active-tree {
+  display: block;
+}
+/****** PRANAV END********/
 
 
   .rowcnt{
@@ -254,4 +297,9 @@
   }
   #bottom_form_label {
     color: white;
+  }
+
+  .cross-button {
+    padding-left: 5px;
+    padding-right: 5px;
   }

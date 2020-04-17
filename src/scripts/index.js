@@ -2,9 +2,8 @@ const remote = require('electron').remote
 const { dialog } = remote;
 
 const win = remote.getCurrentWindow();
-
 var rowcnt;
-var fileNFileObj = {};
+var openFiles = {};
 var mainContent;
 var curObj = null;
 var container = document.getElementById("container");
@@ -55,78 +54,118 @@ const ipcRenderer = require('electron').ipcRenderer
 // const path = require('path')
 // const { readTitles } = require(path.resolve('actions/uiActions'))
 
-const readTitles = function (dataURL) {
-    let titles = []
-    fs.readdirSync(dataURL).forEach((file, i) => {
-        if (file.split('.').length == 2) {
-            titles.push({
-                title: `${file}`,
-                dir: `${dataURL}/${file}`
+// const readTitles = function (dataURL) {
+//     let titles = []
+//     fs.readdirSync(dataURL).forEach((file, i) => {
+//         if (file.split('.').length == 2) {
+//             titles.push({
+//                 title: `${file}`,
+//                 dir: `${dataURL}/${file}`
+//             })
+//         }
+//     })
+//     return titles
+// }
+function walkSync(currentDirPath, folderEl) {
+    console.log("walk", currentDirPath, folderEl);
+    fs.readdirSync(currentDirPath).forEach(function (name) {
+        // var filePath = path.join(currentDirPath, name);
+        var filePath = currentDirPath + "/" + name;
+        var stat = fs.statSync(filePath);
+        let el = document.createElement("li");
+        let text = document.createTextNode(name);
+        if (stat.isFile()) {
+            // Handle files 
+            // Handle Click
+            el.appendChild(text)
+            el.setAttribute("id", filePath);
+            el.addEventListener('click', function (e) { // clicking on sidebar names
+                var check = 0;
+                // if (curObj) curObj.fileData = Buffer(mainContent.value);
+                if (!openFiles[filePath]) {
+                    console.log(filePath, name);
+                    openFiles[filePath] = new FileObject(filePath, name);
+                    createtab(filePath);
+                    // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
+                    check = 1;
+                }
+                settab(filePath);
+                if (check == 1) {
+                    mainContent.value = curObj.pieceTable.buffers[0].toString();
+                    var lines = mainContent.value.split("\n");
+                    incrementrow(lines.length);
+                }
             })
+
+        } else if (stat.isDirectory()) {
+            // Handle Folders
+            let sp = document.createElement("span");
+            sp.className = "caret";
+            sp.append(text);
+            el.className = "folder";
+            el.appendChild(sp);
+            let ulist = document.createElement("ul");
+            ulist.className = "nested";
+            el.appendChild(ulist);
+            el.setAttribute("id", filePath);
+
+            walkSync(filePath, ulist);
         }
-    })
-    return titles
+        folderEl.appendChild(el);
+
+    });
 }
-
-readTitles('allfiles').map(({ title, dir }) => {
-    el = document.createElement("li");
-    text = document.createTextNode(`${title}`);
-    el.appendChild(text)
-    el.addEventListener('click', function (e) { // clicking on sidebar titles
-        var check = 0;
-        // if (curObj) curObj.fileData = Buffer(mainContent.value);
-        if (!fileNFileObj[title]) {
-            fileNFileObj[title] = new FileObject(dir, title);
-            createtab(title);
-            // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
-            check = 1;
-        }
-        settab(title);
-        if (check == 1) {
-            mainContent.value = curObj.pieceTable.buffers[0].toString();
-            var lines = mainContent.value.split("\n");
-            incrementrow(lines.length);
-        }
-    })
-    el.setAttribute("id", title);
+function displayFolder(folderPath){
+    var el = document.createElement("li");
+    let text = document.createTextNode(folderPath.replace(/^.*[\\\/]/, ''));
+    let sp = document.createElement("span");
+    sp.className = "caret";
+    sp.append(text);
+    el.className = "folder";
+    el.appendChild(sp);
+    let ulist = document.createElement("ul");
+    ulist.className = "nested";
+    el.appendChild(ulist);
+    el.setAttribute("id", folderPath);
     document.getElementById('titles').appendChild(el);
-});
+    walkSync(folderPath, ulist);
+}
+displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
 
-function deleteTabSafe(filetitle) {
-    if (filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
-    console.log(filetitle)
-    if (fileNFileObj[filetitle].isSaved) {
-        deletetab(filetitle);
+
+function deleteTabSafe(fileKey) {
+    let filetitle = openFiles[fileKey].fileName;
+    if(filetitle[filetitle.length - 1] === "*") filetitle = filetitle.slice(0, filetitle.length - 1);
+    if(openFiles[fileKey].isSaved){
+        deletetab(fileKey);
+
     }
     else {
         deletePromptOptions.message = "Do you want to Save the changes you made to " + filetitle + "?";
         dialog.showMessageBox(win, deletePromptOptions).then(response => {
             response = response.response;
 
-            if (response === 0) {
-                saveFileObject(fileNFileObj[filetitle]);
+            if(response === 0){
+                saveFileObject(openFiles[fileKey]);
             }
             else if (response === 2) {
                 return;
             }
-            var titleofcurobj = document.getElementById(filetitle);
+            var titleofcurobj = document.getElementById(fileKey);
             titleofcurobj.innerHTML = filetitle;
-            deletetab(filetitle);
+            deletetab(fileKey)
             // delete tempObj;
         })
     }
-
-    // console.log(fileNFileObj + " " + Object.keys(fileNFileObj).length); 
+    
 }
 
-function deletetab(filetitle) {
-    hide();
-    if (curObj.fileName == filetitle) {
-        // console.log(fileNFileObj);
-        // console.log(fileNFileObj[Object.keys(fileNFileObj)[0]].fileName);
+function deletetab(fileKey){
+    
+    if (curObj.fullFilePath == fileKey) {
         fixed = false;
-        for (let key in fileNFileObj) {
-            if (key != filetitle) {
+        for(let key in openFiles){
+            if(key != fileKey){
                 settab(key);
                 fixed = true;
                 break;
@@ -134,42 +173,42 @@ function deletetab(filetitle) {
         }
         if (!fixed) curObj = null;
     }
-    document.getElementById(filetitle + "button").remove();
-    document.getElementById(filetitle + "tabcontent").remove();
+    document.getElementById(fileKey + "button").remove();
+    document.getElementById(fileKey + "tabcontent").remove();
 
-    delete fileNFileObj[filetitle];
+    delete openFiles[fileKey];
 }
 
-function settab(filetitle) {
-    // console.log(filetitle, curObj);
-    if (fileNFileObj[filetitle]) {
+function settab(fileKey) {
+    if (openFiles[fileKey]) {
         if (curObj) {
-            document.getElementById(curObj.fileName + "tabcontent").style.display = "none";
-            // console.log(document.getElementById(curObj.fileName + "button").className);
-            document.getElementById(curObj.fileName + "button").className = document.getElementById(curObj.fileName + "button").className.replace(" active", "");
+            document.getElementById(curObj.fullFilePath + "tabcontent").style.display = "none";
+            document.getElementById(curObj.fullFilePath + "button").className = document.getElementById(curObj.fullFilePath + "button").className.replace(" active", "");
             removelistners();
         }
 
-        curObj = fileNFileObj[filetitle];
-        mainContent = document.getElementById(filetitle + "textarea");
-        rowcnt = document.getElementById(filetitle + "rowcnt");
-        document.getElementById(filetitle + "tabcontent").style.display = "inline-block";
-        document.getElementById(curObj.fileName + "button").className += " active";
+        curObj = openFiles[fileKey];
+        mainContent = document.getElementById(fileKey + "textarea");
+        rowcnt = document.getElementById(fileKey + "rowcnt");
+        document.getElementById(fileKey + "tabcontent").style.display = "inline-block";
+        document.getElementById(fileKey + "button").className += " active";
         createlistners();
     }
 }
 
-function createtab(filetitle, isSaved = true) {
-    container.insertAdjacentHTML("beforeend", '<div id="' + filetitle + 'tabcontent" class="tabcontent"><div id="' + filetitle + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + filetitle + 'textarea" class="content"> </textarea></div>');
-    if (isSaved)
-        tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + '<span onclick=deleteTabSafe("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
+function createtab(fileKey, isSaved=true) {
+    let filetitle = openFiles[fileKey].fileName;
+    container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
+    if(isSaved)
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
     else
-        tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + filetitle + 'button" class="tablinks" onclick=settab("' + filetitle + '")>' + filetitle + "*" + '<span onclick=deleteTabSafe("' + filetitle + '") style="float:right;">&#10005;</span>' + '</button>');
+    tabcontainer.insertAdjacentHTML("beforeend", '<button id="' + fileKey + 'button" class="tablinks" onclick=settab("' + fileKey + '")>' + filetitle + "*" + '<span class="cross-button" onclick=deleteTabSafe("' + fileKey + '") style="float:right;">&#10005;</span>' + '</button>');
+
 
 }
 
 function keuplistner(e) {
-    console.log(rowcnt.childNodes.length);
+    // console.log(rowcnt.childNodes.length);
 }
 
 function keydownlistner(e) {
@@ -180,8 +219,6 @@ function keydownlistner(e) {
     if (curObj && (e.keyCode == 8 || e.keyCode == 46) && !e.altKey && mainContent.value.length >= mainContent.selectionStart) {
         if (curObj.lenofpiece != 0 && curObj.inptype != "delete") {
             addpiece();
-            // console.log("MahaPagal");
-            // console.log("Insertat158" + curObj.lenofpiece + "*" + curObj.inptype);
         }
         var numnewline = document.getSelection().toString();
 
@@ -201,7 +238,7 @@ function keydownlistner(e) {
                     curObj.addpiecestart = Math.min(curObj.addpiecestart, mainContent.selectionStart - 1);
                     curObj.lenofpiece++;
                 }
-                console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
+                // console.log(curObj.addpiecestart + "*" + curObj.lenofpiece + "*" + mainContent.selectionEnd + '*');
                 // addpiece();
             }
 
@@ -257,7 +294,18 @@ function insertlistner(e) {
         // console.log(e.inputType + e.data);
 
         // console.log(mainContent.value[mainContent.selectionStart - 1], "F");
-        makeunsaved();
+        if (curObj.isSaved) {
+            // console.log("Unsaved");
+            // curObj.fileName.toString();
+            var titleofcurobj = document.getElementById(curObj.fullFilePath.toString());
+            var newtitle = curObj.fileName.toString() + "*";
+            titleofcurobj.innerHTML = newtitle;
+            document.getElementById(curObj.fullFilePath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + curObj.fullFilePath + '") style="float:right;">&#10005;</span>';
+            // console.log(newtitle);
+            curObj.isSaved = false;
+        }
+//         makeunsaved();
+
 
     }
 
@@ -277,13 +325,11 @@ function makeunsaved() {
 }
 
 function scrolllistner(e) {
-    // console.log(mainContent.scrollTop + "*" + mainContent.scrollHeight);
     rowcnt.scrollTo(0, mainContent.scrollTop);
 
 }
 
 function clicklistener(e) {
-    // console.log(Math.min(mainContent.selectionStart, mainContent.selectionEnd) == curObj.addpiecestart + curObj.lenofpiece);
     if (Math.min(mainContent.selectionStart, mainContent.selectionEnd) != curObj.addpiecestart + curObj.lenofpiece) {
         if (curObj.piecestring.length != 0)
             addpiece();
@@ -357,12 +403,13 @@ ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
     saveFileObject(curObj);
 });
 
-function saveFileObject(obj) {
-    var titleofcurobj = document.getElementById(obj.fileName.toString());
+function saveFileObject(obj){
+    var titleofcurobj = document.getElementById(obj.fullFilePath.toString());
     var newtitle = obj.fileName;
+    var newPath = obj.fullFilePath;
     if (obj.isSaved === false) {
         titleofcurobj.innerHTML = newtitle;
-        document.getElementById(obj.fileName + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
+        document.getElementById(newPath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newPath + '") style="float:right;">&#10005;</span>';
     }
     addpiece();
     obj.saveTheFile();
@@ -383,7 +430,6 @@ ipcRenderer.on('REDO_NEEDED', function (event, arg) {
 });
 
 ipcRenderer.on('FIND', function (event, arg) {
-    // console.log('REDO_NEEDED')
     if (curObj) {
         document.getElementById("findbar").style.display = "inline";
         document.getElementById("replacebar").style.display = "inline";
@@ -404,18 +450,16 @@ function setCurText() {
         }
         piece = piece.next;
     }
-    console.log(ms.join(''));
-    settab(curObj.fileName.toString());
+    settab(curObj.fullFilePath.toString());
     {
         mainContent.value = ms.join('');
         var lines = mainContent.value.split("\n");
         incrementrow(lines.length);
     }
-    var titleofcurobj = document.getElementById(curObj.fileName.toString());
+    var titleofcurobj = document.getElementById(curObj.fullFilePath.toString());
     var newtitle = curObj.fileName.toString() + "*";
     titleofcurobj.innerHTML = newtitle;
-    document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
-    // console.log(newtitle);
+    document.getElementById(curObj.fullFilePath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + curObj.fullFilePath + '") style="float:right;">&#10005;</span>';
     curObj.isSaved = false;
 }
 var issearchtextchanged = 1;
@@ -501,7 +545,6 @@ function findbarsearch() {
 }
 
 function iseq(c1, c2) {
-    // console.log(c1.toString().toLowerCase() == c2.toString().toLowerCase());
     return c1.toString().toLowerCase() == c2.toString().toLowerCase();
 }
 
@@ -560,14 +603,14 @@ function hide() {
 }
 
 function backupOnClose() {
-    for (const key in fileNFileObj) {
-        if (!fileNFileObj[key].isSaved)
-            fileNFileObj[key].reset();
+    for (const key in openFiles) {
+        if(!openFiles[key].isSaved)
+        openFiles[key].reset();
         else
-            fileNFileObj[key] = fileNFileObj[key].fullFilePath;
+        openFiles[key] = "";
+
     }
-    let jsonData = JSON.stringify(fileNFileObj);
-    console.log(jsonData);
+    let jsonData = JSON.stringify(openFiles);
     fs.writeFile('.bak/main.json', jsonData, function (err) {
         if (err) console.log(err);
     })
@@ -579,17 +622,19 @@ function loadBackup() {
         if (exists) {
             fs.readFile(".bak/main.json", (err, jsonData) => {
                 if (err) return;
-                console.log(jsonData);
-                fileNFileObj = JSON.parse(jsonData);
-                console.log(fileNFileObj);
+                openFiles = JSON.parse(jsonData);
+                
+                for (const [key, value] of Object.entries(openFiles)) {
+                    if(value)
+                    openFiles[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                    else{
+                        fullFilePath = key;
+                        fileName = key.replace(/^.*[\\\/]/, '');
+                        openFiles[key] = new FileObject(fullFilePath, fileName);
+                    }
+                    
 
-                for (const [key, value] of Object.entries(fileNFileObj)) {
-                    if (typeof value === 'object')
-                        fileNFileObj[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
-                    else
-                        fileNFileObj[key] = new FileObject(value, key);
                 }
-                console.log(fileNFileObj);
 
                 setbackupdata();
             })
@@ -601,17 +646,18 @@ function loadBackup() {
 function setbackupdata() {
 
 
-    console.log(fileNFileObj);
+    console.log(openFiles);
 
-    for (var title in fileNFileObj) {
-
-        // console.log(title);
-        let obj = fileNFileObj[title];
-        createtab(title, obj.isSaved);
+    for (var key in openFiles) {
+        
+        let obj = openFiles[key];
+        let title = obj.fileName;
+        createtab(key, obj.isSaved);
         obj.nodenumber = tabcontainer.childNodes.length - 1;
-        settab(title);
-        if (!obj.isSaved) {
-            document.getElementById(curObj.fileName.toString()).innerHTML = title + "*";
+        settab(key);
+        if(!obj.isSaved){
+            document.getElementById(curObj.fullFilePath.toString()).innerHTML = title + "*";
+
         }
         mainContent.value = curObj.pieceTable.buffers[0].toString();
         var lines = mainContent.value.split("\n");
@@ -619,10 +665,6 @@ function setbackupdata() {
     }
 }
 loadBackup();
-
-// iseq('A','A');
-// console.log(fileNFileObj)
-// setbackupdata();
 
 
 
@@ -633,22 +675,19 @@ window.onbeforeunload = (e) => {
 
 let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 
-ipcRenderer.on('NEW_FILE_NEEDED', function (event, arg) {
-    // console.log("RECEIVED")
-    // if (textInputFormDiv.style.display === "none") {
-    //     textInputFormDiv.style.display = "block";
-    // } else {
-    //     textInputFormDiv.style.display = "none";
-    // }
+ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
+
+
 
     if (textInputFormDiv.style.display === "none") {
         textInputFormDiv.style.display = "block";
     }
 })
 
-let textInputForm = document.getElementById('bottom_footer_form');
-textInputForm.addEventListener('submit', function (e) {
-    e.preventDefault()
+let textInputForm =  document.getElementById('bottom_footer_form');
+textInputForm.addEventListener('submit', function(e){
+    e.preventDefault();
+
     let newFileName = document.getElementById("bottom_form_input").value;
     document.getElementById("bottom_form_input").value = "";
     let newFilePath = "allfiles/" + newFileName;
@@ -661,26 +700,25 @@ textInputForm.addEventListener('submit', function (e) {
             el.addEventListener('click', function (e) { // clicking on sidebar titles
                 var check = 0;
                 // if (curObj) curObj.fileData = Buffer(mainContent.value);
-                if (!fileNFileObj[newFileName]) {
-                    fileNFileObj[newFileName] = new FileObject(newFilePath, newFileName);
-                    createtab(newFileName);
+                if (!openFiles[newFilePath]) {
+                    openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
+                    createtab(newFilePath);
                     // fileNFileObj[title].nodenumber = tabcontainer.childNodes.length - 1;
                     check = 1;
                 }
-                settab(newFileName);
+                settab(newFilePath);
                 if (check == 1) {
                     mainContent.value = curObj.pieceTable.buffers[0].toString();
                     var lines = mainContent.value.split("\n");
                     incrementrow(lines.length);
                 }
             })
-            el.setAttribute("id", newFileName);
+            el.setAttribute("id", newFilePath);
             document.getElementById('titles').appendChild(el);
 
             textInputFormDiv.style.display = "none";
         }
-    }))
-        // write file here ?
-        console.log(newFileName)
+    }));
+
 })
 
