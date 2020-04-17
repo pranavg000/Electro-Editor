@@ -204,6 +204,20 @@
     border: 1px solid grey;
 
 }
+#replacebar {
+  display: none;
+  z-index: 10;
+  position: fixed;
+  padding: 10px 0;
+  top: 9%;
+  width: 20%;
+  height: auto;
+  right: 2%;
+  background: #f1f1f1;
+  border-top: 0px;
+  border: 1px solid grey;
+
+}
 
 #searchbar{
   font-size: 17px;
@@ -213,6 +227,17 @@
   border-right:2px solid grey ;
   outline: none;
   width: 60%;
+  background: #f1f1f1;
+}
+#replacesearchbar{
+  font-size: 17px;
+  padding: 0 10px;
+  float: right;
+  margin-right: 1%;
+  border: none;
+  border-right:2px solid grey ;
+  outline: none;
+  width: 55%;
   background: #f1f1f1;
 }
   .bottom_footer{

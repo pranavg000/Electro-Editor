@@ -233,6 +233,7 @@ function keydownlistner(e) {
 
 function insertlistner(e) {
     if (curObj) {
+        console.log("IIII");
         if (e.inputType.match(/insert/) && e.data != null) {
             console.log("hhh");
             if (curObj.inptype != 'insert')
@@ -256,19 +257,23 @@ function insertlistner(e) {
         // console.log(e.inputType + e.data);
 
         // console.log(mainContent.value[mainContent.selectionStart - 1], "F");
-        if (curObj.isSaved) {
-            // console.log("Unsaved");
-            curObj.fileName.toString();
-            var titleofcurobj = document.getElementById(curObj.fileName.toString());
-            var newtitle = curObj.fileName.toString() + "*";
-            titleofcurobj.innerHTML = newtitle;
-            document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
-            // console.log(newtitle);
-            curObj.isSaved = false;
-        }
+        makeunsaved();
 
     }
 
+}
+
+function makeunsaved() {
+    if (curObj.isSaved) {
+        // console.log("Unsaved");
+        curObj.fileName.toString();
+        var titleofcurobj = document.getElementById(curObj.fileName.toString());
+        var newtitle = curObj.fileName.toString() + "*";
+        titleofcurobj.innerHTML = newtitle;
+        document.getElementById(curObj.fileName + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newtitle + '") style="float:right;">&#10005;</span>';
+        // console.log(newtitle);
+        curObj.isSaved = false;
+    }
 }
 
 function scrolllistner(e) {
@@ -381,6 +386,8 @@ ipcRenderer.on('FIND', function (event, arg) {
     // console.log('REDO_NEEDED')
     if (curObj) {
         document.getElementById("findbar").style.display = "inline";
+        document.getElementById("replacebar").style.display = "inline";
+
         // const noti ={"title":"asv","body":"adsf"};
         // const find = new window.Notification("abs",noti);
         // const find1 =new window.HTMLDialogElement;
@@ -424,10 +431,43 @@ var reqarray = [];
 
 document.getElementById("searchbar").addEventListener('input', function def(e) {
     issearchtextchanged = 1;
+    reqarray = [];
+    searchidx = 0;
     document.getElementById("findbar-text").innerHTML = "No Results";
 
 });
 
+
+function replace_all() {
+    let replacetxt = document.getElementById("replacesearchbar").value;
+    let pattern = document.getElementById("searchbar").value;
+    let off = 0;
+    if (issearchtextchanged == 0 && reqarray.length > 0 && replacetxt != pattern) {
+        makeunsaved();
+        addpiece();
+        for (var i = 0; i < reqarray.length; i++) {
+            reqarray[i] += off;
+            // mainContent.select();
+            // mainContent.scrollTo(Math.max(0, reqarray[i] - 50), Math.max(0, reqarray[i] - 50));
+            // mainContent.setSelectionRange(reqarray[i], reqarray[i] + pattern.length);
+            curObj.inptype = "delete";
+            curObj.lenofpiece = Math.abs(pattern.length)
+            curObj.addpiecestart = Math.min(reqarray[i], reqarray[i] + pattern.length);
+            addpiece();
+            curObj.addpiecestart = reqarray[i];
+            curObj.piecestring.push(replacetxt);
+            curObj.inptype = "insert";
+            curObj.lenofpiece = replacetxt.length;
+            addpiece();
+            mainContent.setRangeText(replacetxt, reqarray[i], reqarray[i] + pattern.length);
+            off += replacetxt.length - pattern.length;
+        }
+        issearchtextchanged = 1;
+        reqarray = [];
+        searchidx = 0;
+        document.getElementById("findbar-text").innerHTML = "No Results";
+    }
+}
 
 function findbarsearch() {
     let pattern = document.getElementById("searchbar").value;
@@ -513,6 +553,8 @@ function findtext(pattern) {
 function hide() {
     document.getElementById("findbar").style.display = "none";
     document.getElementById("searchbar").value = "";
+    document.getElementById("replacebar").style.display = "none";
+    document.getElementById("replacesearchbar").value = "";
     document.getElementById("findbar-text").innerHTML = "No Results";
 }
 

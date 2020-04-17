@@ -18,7 +18,15 @@
 
     <div id="tabcontainer" class="tab">
     </div>
-  <div id="findbar"><input id="searchbar" type="text"><span style="margin-left: 3px;" id="findbar-text">No Results</span><button id="findbar-close" style="width:5%; margin-right: 10px; float: right;" onclick="hide();"><i class="fa fa-close"></i></button><button id="findbar-search" style="margin-right: 10px; float: right;" onclick="findbarsearch();"><i class="fa fa-search"></i></button>
+    <div id="findbar"><input id="searchbar" type="text"><span style="margin-left: 3px;" id="findbar-text">No
+        Results</span><button id="findbar-close" style="width:5%; margin-right: 10px; float: right;"
+        onclick="hide();"><i class="fa fa-close"></i></button><button id="findbar-search"
+        style="margin-right: 10px; float: right;" onclick="findbarsearch();"><i class="fa fa-search"></i></button>
+    </div>
+    <div id="replacebar"><span style="margin-left: 3px;" id="replacebar-text">Replace With</span><button
+        id="replacebar-all" style=" margin-right: 10px; float: right;" onclick="replace_all();"><i
+          class="fa fa-files-o"></i></button><button id="replacebar-selected" style="margin-right: 10px; float: right;"
+        onclick="replace_selected();"><i class="fa fa-file-text-o"></i></button><input id="replacesearchbar" type="text">
     </div>
     <!-- <div id="London" class="tabcontent">
       <div class="rowcnt" readonly></div>
@@ -32,11 +40,11 @@
   <button onclick="close_()">Close</button>
   <button onclick="read_()">Read</button>
   <button onclick="write_()">Write</button> -->
-  <div class="bottom_footer" style="display: none;" >
-  <form id="bottom_footer_form" action="">
-    <label id="bottom_form_label" for="bottom_form_input">Enter</label>
-    <input id="bottom_form_input" type="text">
-  </form>
+  <div class="bottom_footer" style="display: none;">
+    <form id="bottom_footer_form" action="">
+      <label id="bottom_form_label" for="bottom_form_input">Enter</label>
+      <input id="bottom_form_input" type="text">
+    </form>
   </div>
   <script src="scripts/FileObject.js"></script>
   <script src="scripts/charwisept/PieceTable.js"></script>
