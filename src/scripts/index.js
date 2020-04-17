@@ -91,7 +91,7 @@ function addContextMenu(folderEl){
 }
 
 function walkSync(currentDirPath, folderEl) {
-    console.log("walk", currentDirPath, folderEl);
+    // console.log("walk", currentDirPath, folderEl);
     fs.readdirSync(currentDirPath).forEach(function (name) {
         // var filePath = path.join(currentDirPath, name);
         var filePath = currentDirPath + "/" + name;
@@ -158,7 +158,7 @@ function displayFolder(folderPath) {
     document.getElementById('titles').appendChild(el);
     walkSync(folderPath, ulist);
 }
-displayFolder('allfiles'); // TODO : Open any folder
+displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
 
 
 function deleteTabSafe(fileKey) {
@@ -715,8 +715,23 @@ ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
     displayTextInputForm("file"); 
 })
 
+<<<<<<< Updated upstream
 let textInputForm = document.getElementById('bottom_footer_form');
 textInputForm.addEventListener('submit', function (e) {
+=======
+function getFolderPath(fullFilePath){
+    console.log(fullFilePath);
+    for(let i=fullFilePath.length-1; i>=0; i--){
+        if(fullFilePath[i]==='/'){
+            return fullFilePath.slice(0, i);
+        }
+    }
+}
+
+
+let textInputForm =  document.getElementById('bottom_footer_form');
+textInputForm.addEventListener('submit', function(e){
+>>>>>>> Stashed changes
     e.preventDefault();
 
     let newFileName = document.getElementById("bottom_form_input").value;
@@ -777,16 +792,50 @@ textInputForm.addEventListener('submit', function (e) {
                 document.getElementById(newFolderPath + "ul").appendChild(el);
             
     
-            hideTextInputForm();
+            
             }
     }
     else if(newFType === "file") {
-        let savePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName});
-        fs.closeSync(fs.openSync(savePath, 'w'));
+        let newFilePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName, properties: ['openDirectory']});
+        newFilePath = newFilePath.replace(/\\/g,"/");
+        fs.closeSync(fs.openSync(newFilePath, 'w'));
+        console.log(newFilePath);
         // console.log(savePath, newFileName);
-    }
+        // let newFileName = newFilePath.replace(/^.*[\\\/]/, '');
+        let el = document.createElement("li");
+        let text = document.createTextNode(newFileName);
+            
+                // Handle files 
+                // Handle Click
+                fs.closeSync(fs.openSync(newFilePath, 'w'));
+                el.appendChild(text)
+                el.setAttribute("id", newFilePath);
     
-    });
+                el.addEventListener('click', function (e) { // clicking on sidebar names
+                    var check = 0;
+                    // if (curObj) curObj.fileData = Buffer(mainContent.value);
+                    if (!openFiles[newFilePath]) {
+                        console.log(newFilePath, newFileName);
+                        openFiles[newFilePath] = new FileObject(newFilePath, newFileName);
+                        createtab(newFilePath);
+                        // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
+                        check = 1;
+                    }
+                    settab(newFilePath);
+                    if (check == 1) {
+                        mainContent.value = curObj.pieceTable.buffers[0].toString();
+                        var lines = mainContent.value.split("\n");
+                        incrementrow(lines.length);
+                    }
+                })
+                newFolderPath = getFolderPath(newFilePath);
+                console.log(newFolderPath);
+                document.getElementById(newFolderPath + "ul").appendChild(el);
+               
+        }
+        hideTextInputForm();
+
+});
 
 
 
