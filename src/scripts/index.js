@@ -782,6 +782,11 @@ textInputForm.addEventListener('submit', function(e){
         if(newFolderPath) {
             document.getElementById(newFolderPath + "ul").appendChild(el);
         }
+        else if(ftype === "file") {
+            let savePath = dialog.showSaveDialog({});
+            // fs.closeSync(fs.openSync(newFilePath, 'w'));
+            console.log(savePath);
+        }
 
         hideTextInputForm();
         }
