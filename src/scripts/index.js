@@ -130,7 +130,7 @@ function displayFolder(folderPath){
     document.getElementById('titles').appendChild(el);
     walkSync(folderPath, ulist);
 }
-displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
+displayFolder('allfiles'); // TODO : Open any folder
 
 
 function deleteTabSafe(fileKey) {
