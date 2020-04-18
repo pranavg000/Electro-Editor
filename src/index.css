@@ -27,8 +27,8 @@
     --background: #FFFFFF;
     --border-color: #50C68A;
     --text-color: #232323;
-    --sidebar-color: #2F3235;
-    --sidebar-text: #939395;
+    --sidebar-color: rgb(35, 37, 39);
+    --sidebar-text: #9f9fa0;
   }
   
   * {
@@ -110,6 +110,31 @@ ul, #titles {
 .active-tree {
   display: block;
 }
+
+.nested {
+  border-left: 1px solid #b7b7b8;
+}
+
+/* .folder-icon {
+  width: 16.6px;
+  height: 11.6px;
+  margin: 0 auto;
+  margin-top: 50px;
+  position: relative;
+  background-color: #708090;
+  border-radius: 0 2px 2px 2px;
+}
+
+.folder-icon:before {
+  content: '';
+  width: 50%;
+  height: 2px;
+  border-radius: 0 3.3px 0 0;
+  background-color: #708090;
+  position: absolute;
+  top: -2px;
+  left: 0px;
+} */
 /****** PRANAV END********/
 
 
