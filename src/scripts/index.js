@@ -558,7 +558,6 @@ function backupOnClose() {
             openFiles[key].reset();
         else
             openFiles[key] = "";
-
     }
     let jsonData = JSON.stringify(openFiles);
     fs.writeFile('.bak/main.json', jsonData, function (err) {
@@ -582,10 +581,7 @@ function loadBackup() {
                         fileName = key.replace(/^.*[\\\/]/, '');
                         openFiles[key] = new FileObject(fullFilePath, fileName);
                     }
-
-
                 }
-
                 setbackupdata();
             })
         }
