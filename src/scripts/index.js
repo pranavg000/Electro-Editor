@@ -1,20 +1,13 @@
 const remote = require('electron').remote
-const { dialog, MenuItem, Menu } = remote;
 const ipcRenderer = require('electron').ipcRenderer;
 const win = remote.getCurrentWindow();
 var rowcnt;
 var openFiles = {};
 var mainContent;
-var rightClickTarget = null;
 var curObj = null;
 var container = document.getElementById("container");
 var tabcontainer = document.getElementById("tabcontainer");
-var deletePromptOptions = {
-    type: "warning",
-    buttons: ["Yes", "No", "Cancel"],
-    message: "Do you want to Save the changes you made",
-    detail: "Your changes will be lost if you don't save them."
-}
+
 var issearchtextchanged = 1;
 var searchidx = 0;
 var reqarray = [];
@@ -48,28 +41,14 @@ var backupOnClose = backup_logic.backupOnClose;
 var loadBackup = backup_logic.loadBackup;
 var setbackupdata = backup_logic.setbackupdata;
 
-const ctxMenu = new Menu();
-ctxMenu.append(new MenuItem({
-    label: 'New File',
-    click: () => {
-        displayTextInputForm("file", rightClickTarget.id);
-        // console.log("HEllo");
-    }
-}));
-ctxMenu.append(new MenuItem({
-    label: 'New Folder',
-    click: () => {
-        displayTextInputForm("folder", rightClickTarget.id);
-    }
-}));
-function addContextMenu(folderEl) {
-    folderEl.addEventListener('contextmenu', function (ev) {
-        ev.preventDefault();
-        rightClickTarget = ev.target.parentElement;
-        ctxMenu.popup(win);
-    }, false);
+const remoteUtil = require((path.resolve(__dirname, 'scripts/remoteUtils.js')));
+var addContextMenu = remoteUtil.addContextMenu;
+var saveDialog = remoteUtil.saveDialog;
 
-}
+const sidebar = require((path.resolve(__dirname, 'scripts/sidebar.js')));
+var handleFolderSideBar = sidebar.handleFolderSideBar;
+var handleFileSideBar = sidebar.handleFileSideBar;
+
 
 function walkSync(currentDirPath, folderEl) {
     fs.readdirSync(currentDirPath).forEach(function (fileName) {
@@ -86,7 +65,7 @@ function walkSync(currentDirPath, folderEl) {
 function displayFolder(folderPath) {
     walkSync(folderPath, handleFolderSideBar(folderPath, folderPath.replace(/^.*[\\\/]/, ''), document.getElementById('titles')));
 }
-displayFolder('allfiles'); // TODO : Open any folder
+displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
 
 
 ipcRenderer.on('SAVE_NEEDED', function (event, arg) {
@@ -195,7 +174,7 @@ textInputForm.addEventListener('submit', function (e) {
         }
     }
     else if (newFType === "file") {
-        let newFilePath = dialog.showSaveDialogSync({ defaultPath: 'allfiles/' + newFileName });
+        let newFilePath = saveDialog(newFileName);
         newFilePath = newFilePath.replace(/\\/g, "/");
         fs.closeSync(fs.openSync(newFilePath, 'w'));
         console.log(newFilePath);
@@ -205,57 +184,7 @@ textInputForm.addEventListener('submit', function (e) {
 
 });
 
-function handleFolderSideBar(fullFolderPath, folderName, parentUL) {
-    let el = document.createElement("li");
-    let text = document.createTextNode(folderName);
-    let sp = document.createElement("span");
-    sp.className = "caret";
-    sp.addEventListener("click", function () {
-        console.log("CLICK", this, this.nextSibling);
-        this.parentElement.querySelector(".nested").classList.toggle("active-tree");
-        this.classList.toggle("caret-down");
-        // console.log(this.nextSibling);
-        this.nextSibling.style.paddingLeft = "20px";
-    });
-    sp.append(text);
-    el.className = "folder";
-    el.appendChild(sp);
-    var ulist = document.createElement("ul");
-    ulist.setAttribute("id", fullFolderPath + "ul");
-    ulist.className = "nested";
-    el.appendChild(ulist);
-    el.setAttribute("id", fullFolderPath);
-    addContextMenu(sp);
-    parentUL.appendChild(el);
-    return ulist;
-}
 
-function handleFileSideBar(fullFilePath, fileName, parentUL) {
-    let el = document.createElement("li");
-    let text = document.createTextNode(fileName);
-    el.appendChild(text)
-    el.setAttribute("id", fullFilePath);
-
-    el.addEventListener('click', function (e) { // clicking on sidebar names
-        var check = 0;
-        // if (curObj) curObj.fileData = Buffer(mainContent.value);
-        if (!openFiles[fullFilePath]) {
-            console.log(fullFilePath, fileName);
-            openFiles[fullFilePath] = new FileObject(fullFilePath, fileName);
-            createtab(fullFilePath);
-            // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
-            check = 1;
-        }
-        settab(fullFilePath);
-        if (check == 1) {
-            mainContent.value = curObj.pieceTable.buffers[0].toString();
-            var lines = mainContent.value.split("\n");
-            incrementrow(lines.length);
-        }
-    })
-    parentUL.appendChild(el);
-
-}
 
 
 
