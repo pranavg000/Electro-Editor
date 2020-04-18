@@ -66,13 +66,13 @@ ctxMenu.append(new MenuItem({
         displayTextInputForm("folder", rightClickTarget.id);
     }
 }));
-function addContextMenu(folderEl){
-    folderEl.addEventListener('contextmenu', function(ev) {
+function addContextMenu(folderEl) {
+    folderEl.addEventListener('contextmenu', function (ev) {
         ev.preventDefault();
         rightClickTarget = ev.target.parentElement;
         ctxMenu.popup(win);
     }, false);
-    
+
 }
 
 function walkSync(currentDirPath, folderEl) {
@@ -81,7 +81,7 @@ function walkSync(currentDirPath, folderEl) {
         var stat = fs.statSync(filePath);
         if (stat.isFile()) {
             handleFileSideBar(filePath, fileName, folderEl);
-        } else if (stat.isDirectory()) {           
+        } else if (stat.isDirectory()) {
             walkSync(filePath, handleFolderSideBar(filePath, fileName, folderEl));
         }
 
@@ -90,7 +90,7 @@ function walkSync(currentDirPath, folderEl) {
 function displayFolder(folderPath) {
     walkSync(folderPath, handleFolderSideBar(folderPath, folderPath.replace(/^.*[\\\/]/, ''), document.getElementById('titles')));
 }
-displayFolder('C:/Users/PRANAV/Documents/electron_tuts/textEditor/allfiles'); // TODO : Open any folder
+displayFolder('allfiles'); // TODO : Open any folder
 
 
 function deleteTabSafe(fileKey) {
@@ -625,7 +625,7 @@ window.onbeforeunload = (e) => {
 
 let textInputFormDiv = document.getElementsByClassName('bottom_footer')[0];
 
-function displayTextInputForm(ftype, folder=""){
+function displayTextInputForm(ftype, folder = "") {
     console.log(ftype, folder);
 
     if (textInputFormDiv.style.display === "none") {
@@ -635,51 +635,51 @@ function displayTextInputForm(ftype, folder=""){
     }
 }
 
-function hideTextInputForm(){
+function hideTextInputForm() {
     if (textInputFormDiv.style.display === "block") {
         document.getElementById("bottom_form_input").value = "";
         textInputFormDiv.style.display = "none";
     }
 }
 
-ipcRenderer.on('NEW_FILE_NEEDED', function(event, arg){
-    displayTextInputForm("file"); 
+ipcRenderer.on('NEW_FILE_NEEDED', function (event, arg) {
+    displayTextInputForm("file");
 })
 
 
-function getFolderPath(fullFilePath){
+function getFolderPath(fullFilePath) {
     console.log(fullFilePath);
-    for(let i=fullFilePath.length-1; i>=0; i--){
-        if(fullFilePath[i]==='/'){
+    for (let i = fullFilePath.length - 1; i >= 0; i--) {
+        if (fullFilePath[i] === '/') {
             return fullFilePath.slice(0, i);
         }
     }
 }
 
 
-let textInputForm =  document.getElementById('bottom_footer_form');
-textInputForm.addEventListener('submit', function(e){
+let textInputForm = document.getElementById('bottom_footer_form');
+textInputForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
     let newFileName = document.getElementById("bottom_form_input").value;
     let newFolderPath = document.getElementById("bottom_form_input_folder").value;
     let newFType = document.getElementById("bottom_form_input_ftype").value;
     let newFilePath = newFolderPath + "/" + newFileName;
-    if(newFolderPath){
+    if (newFolderPath) {
         if (!fs.existsSync(newFilePath)) {
             if (newFType === "file") {
                 fs.closeSync(fs.openSync(newFilePath, 'w'));
                 handleFileSideBar(newFilePath, newFileName, document.getElementById(newFolderPath + "ul"));
-            } 
+            }
             else if (newFType === "folder") {
                 fs.mkdirSync(newFilePath);
-                handleFolderSideBar(newFilePath, newFileName, document.getElementById(newFolderPath + "ul"));    
+                handleFolderSideBar(newFilePath, newFileName, document.getElementById(newFolderPath + "ul"));
             }
         }
     }
-    else if(newFType === "file") {
-        let newFilePath = dialog.showSaveDialogSync({defaultPath: 'allfiles/' + newFileName});
-        newFilePath = newFilePath.replace(/\\/g,"/");
+    else if (newFType === "file") {
+        let newFilePath = dialog.showSaveDialogSync({ defaultPath: 'allfiles/' + newFileName });
+        newFilePath = newFilePath.replace(/\\/g, "/");
         fs.closeSync(fs.openSync(newFilePath, 'w'));
         console.log(newFilePath);
         handleFileSideBar(newFilePath, newFileName, document.getElementById(getFolderPath(newFilePath) + "ul"));
@@ -688,18 +688,18 @@ textInputForm.addEventListener('submit', function(e){
 
 });
 
-function handleFolderSideBar(fullFolderPath, folderName, parentUL){
+function handleFolderSideBar(fullFolderPath, folderName, parentUL) {
     let el = document.createElement("li");
     let text = document.createTextNode(folderName);
     let sp = document.createElement("span");
     sp.className = "caret";
-    sp.addEventListener("click", function() {
+    sp.addEventListener("click", function () {
         console.log("CLICK", this, this.nextSibling);
         this.parentElement.querySelector(".nested").classList.toggle("active-tree");
         this.classList.toggle("caret-down");
         // console.log(this.nextSibling);
         this.nextSibling.style.paddingLeft = "20px";
-        });
+    });
     sp.append(text);
     el.className = "folder";
     el.appendChild(sp);
@@ -713,7 +713,7 @@ function handleFolderSideBar(fullFolderPath, folderName, parentUL){
     return ulist;
 }
 
-function handleFileSideBar(fullFilePath, fileName, parentUL){
+function handleFileSideBar(fullFilePath, fileName, parentUL) {
     let el = document.createElement("li");
     let text = document.createTextNode(fileName);
     el.appendChild(text)
