@@ -1,9 +1,9 @@
 function addpiece() {
-    console.log("*****");
-    console.log(curObj.addpiecestart);
-    console.log(curObj.lenofpiece);
-    console.log(curObj.inptype);
-    console.log("*****");
+    // console.log("*****");
+    // console.log(curObj.addpiecestart);
+    // console.log(curObj.lenofpiece);
+    // console.log(curObj.inptype);
+    // console.log("*****");
     if (curObj.inptype.match(/insert/) && curObj.lenofpiece > 0) {
         var reqstring = curObj.piecestring.join('');
         console.log(reqstring, curObj.addpiecestart + 1);
@@ -50,7 +50,7 @@ function decrementrow(v) {
 function makeunsaved() {
     if (curObj.isSaved) {
         // console.log("Unsaved");
-        console.log("IMP" + curObj.fullFilePath.toString());
+        // console.log("IMP" + curObj.fullFilePath.toString());
         var titleofcurobj = document.getElementById(curObj.fullFilePath.toString());
         var newtitle = curObj.fileName.toString() + "*";
         titleofcurobj.innerHTML = newtitle;
@@ -72,27 +72,27 @@ function saveFileObject(obj) {
     obj.saveTheFile();
 }
 
-function setCurText() {
+function setCurText(obj) {
     let ms = [];
-    let piece = curObj.pieceTable.pieceHead;
+    let piece = obj.pieceTable.pieceHead;
     while (piece) {
-        let length = piece.end - piece.start + 1;
         for (let i = piece.start; i <= piece.end; i++) {
-            ms.push(curObj.pieceTable.buffers[piece.bufferIndex][i]);
+            ms.push(obj.pieceTable.buffers[piece.bufferIndex][i]);
         }
         piece = piece.next;
     }
-    settab(curObj.fullFilePath.toString());
-    // {
-    mainContent.value = ms.join('');
-    var lines = mainContent.value.split("\n");
-    let incre = lines.length - rowcnt.childNodes.length;
-    if (incre > 0)
-        incrementrow(incre);
-    else if (incre < 0)
-        decrementrow(Math.abs(incre));
-    // }
-    makeunsaved();
+    //settab(curObj.fullFilePath.toString());
+    document.getElementById(obj.fullFilePath.toString() + "textarea").value = ms.join('');
+    if(obj.fullFilePath === curObj.fullFilePath){
+        var lines = mainContent.value.split("\n");
+        let incre = lines.length - rowcnt.childNodes.length;
+        if (incre > 0)
+            incrementrow(incre);
+        else if (incre < 0)
+            decrementrow(Math.abs(incre));
+    }
+    
+    // makeunsaved();
 }
 
 module.exports = {

@@ -22,7 +22,7 @@ function loadBackup() {
 
                 for (const [key, value] of Object.entries(openFiles)) {
                     if (value)
-                        openFiles[key] = new FileObject("A", "A", value);//Object.assign(new FileObject, fileNFileObj[key]);
+                        openFiles[key] = new FileObject(null, null, value);//Object.assign(new FileObject, fileNFileObj[key]);
                     else {
                         fullFilePath = key;
                         fileName = key.replace(/^.*[\\\/]/, '');
@@ -40,9 +40,6 @@ function loadBackup() {
 
 
 function setbackupdata() {
-
-
-    console.log(openFiles);
 
     for (var key in openFiles) {
 

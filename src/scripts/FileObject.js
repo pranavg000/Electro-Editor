@@ -6,21 +6,10 @@ class FileObject {
         if (!clone) {
             this.isOpen = true;
             this.isSaved = true;
+            this.isChangedRecently = false;            
             this.fileName = Object(fileName);
-            let fileDatatemp = fs.readFileSync(fullFilePath, 'utf8').toString();
-            let fileData = ""
-            // fileData = fileDatatemp;
-            for (let i = 0; i < fileDatatemp.length; i++) {
-                if (fileDatatemp.charCodeAt(i) != 13)
-                    fileData += fileDatatemp.charAt(i);
-            }
-            // let fileData = fs.readFileSync(fullFilePath, 'utf8', function (err, data) {
-            //     myconfig = data.toString('utf8').replace(/^\uFEFF/, '');
-            // });
-            // for (let i = 0; i < fileData.length; i++)
-            //     console.log(fileData.charAt(i));
-            this.pieceTable = new PieceTable(fileData);
             this.fullFilePath = Object(fullFilePath);
+            this.pieceTable = new PieceTable(this.safeRead());
             this.piecestring = [];
             this.inptype = ""
             this.addpiecestart = -10;
@@ -30,8 +19,8 @@ class FileObject {
             this.isOpen = clone.isOpen;
             this.isSaved = clone.isSaved;
             this.fileName = Object(clone.fileName);
-            this.pieceTable = new PieceTable(clone.pieceTable.buffers[0]);
             this.fullFilePath = Object(clone.fullFilePath);
+            this.pieceTable = new PieceTable(clone.pieceTable.buffers[0]);
             this.piecestring = [];
             this.inptype = ""
             this.addpiecestart = -10;
@@ -42,12 +31,22 @@ class FileObject {
 
     }
 
+    safeRead(){
+        let fileDatatemp = fs.readFileSync(this.fullFilePath.toString(), 'utf8').toString();
+        let fileData = []
+        for (let i = 0; i < fileDatatemp.length; i++) {
+            if (fileDatatemp.charCodeAt(i) != 13)
+                fileData.push(fileDatatemp.charAt(i));
+        }
+        return fileData.join('');
+    }
+
 
     saveTheFile() {
         // console.log(this.pieceTable);
         // return;
         if (!this.isSaved) {
-            // if(1){ // temp
+            this.isChangedRecently = true;
             this.isSaved = true;
             let fileDescriptor;
             var this_ = this;
@@ -71,9 +70,7 @@ class FileObject {
                 }
                 fs.close(fileDescriptor, function (err) {
                     if (err) console.log(err);
-                    console.log("Saved")
-                    // console.log(fullText.join(''))
-                    // this_.pieceTable = new PieceTable(fullText.join(''));
+                    console.log("Saved");
                 });
             });
         }

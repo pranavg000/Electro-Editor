@@ -47,6 +47,7 @@ function deleteTabSafe(fileKey) {
 }
 
 function deletetab(fileKey) {
+    fs.unwatchFile(fileKey);
     hide();
     if (curObj.fullFilePath == fileKey) {
         fixed = false;
@@ -65,6 +66,14 @@ function deletetab(fileKey) {
     delete openFiles[fileKey];
 }
 
+function reloadFile(fileKey){
+    let tempObj = new FileObject(fileKey, fileKey.replace(/^.*[\\\/]/, ''));
+    openFiles[fileKey] = tempObj;
+
+    if(curObj.fullFilePath.toString() === fileKey) curObj = openFiles[fileKey];
+    setCurText(openFiles[fileKey]);
+}
+
 function settab(fileKey) {
     if (openFiles[fileKey]) {
         if (curObj) {
@@ -76,6 +85,7 @@ function settab(fileKey) {
         curObj = openFiles[fileKey];
         mainContent = document.getElementById(fileKey + "textarea");
         rowcnt = document.getElementById(fileKey + "rowcnt");
+        //checkChanged()
         document.getElementById(fileKey + "tabcontent").style.display = "inline-block";
         document.getElementById(fileKey + "button").className += " active";
         createlistners();
@@ -83,6 +93,13 @@ function settab(fileKey) {
 }
 
 function createtab(fileKey, isSaved = true) {
+
+    fs.watchFile(fileKey, (cur, prev) => {
+        if(!openFiles[fileKey].isChangedRecently)
+            reloadFile(fileKey);
+        openFiles[fileKey].isChangedRecently = false;
+    })
+
     let filetitle = openFiles[fileKey].fileName;
     container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
     if (isSaved)

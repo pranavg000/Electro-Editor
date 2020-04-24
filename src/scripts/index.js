@@ -54,6 +54,7 @@ function walkSync(currentDirPath, folderEl) {
     fs.readdirSync(currentDirPath).forEach(function (fileName) {
         var filePath = currentDirPath + "/" + fileName;
         var stat = fs.statSync(filePath);
+        // console.log(stat, filePath);
         if (stat.isFile()) {
             handleFileSideBar(filePath, fileName, folderEl);
         } else if (stat.isDirectory()) {
@@ -77,7 +78,9 @@ ipcRenderer.on('UNDO_NEEDED', function (event, arg) {
     if (curObj) {
         addpiece();
         curObj.pieceTable.applyUndo();
-        setCurText();
+        setCurText(curObj);
+        makeunsaved();
+
     }
 });
 
@@ -85,7 +88,9 @@ ipcRenderer.on('REDO_NEEDED', function (event, arg) {
     if (curObj) {
         addpiece();
         curObj.pieceTable.applyRedo();
-        setCurText();
+        setCurText(curObj);
+        makeunsaved();
+
     }
 });
 
