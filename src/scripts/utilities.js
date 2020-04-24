@@ -60,14 +60,21 @@ function makeunsaved() {
     }
 }
 
+function makesaved(obj=curObj){
+    if(!obj.isSaved){
+        var titleofcurobj = document.getElementById(obj.fullFilePath.toString());
+        var newtitle = obj.fileName;
+        var newPath = obj.fullFilePath;
+        if (obj.isSaved === false) {
+            titleofcurobj.innerHTML = newtitle;
+            document.getElementById(newPath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newPath + '") style="float:right;">&#10005;</span>';
+        }
+        obj.isSaved = true;
+    } 
+}
+
 function saveFileObject(obj) {
-    var titleofcurobj = document.getElementById(obj.fullFilePath.toString());
-    var newtitle = obj.fileName;
-    var newPath = obj.fullFilePath;
-    if (obj.isSaved === false) {
-        titleofcurobj.innerHTML = newtitle;
-        document.getElementById(newPath + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + newPath + '") style="float:right;">&#10005;</span>';
-    }
+    makesaved(obj);
     addpiece();
     obj.saveTheFile();
 }
@@ -101,6 +108,7 @@ module.exports = {
     decrementrow: decrementrow,
     textchanged: textchanged,
     makeunsaved: makeunsaved,
+    makesaved: makesaved,
     saveFileObject: saveFileObject,
     setCurText: setCurText
 }

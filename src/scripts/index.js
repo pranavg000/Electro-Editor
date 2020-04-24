@@ -19,6 +19,7 @@ var incrementrow = utilities.incrementrow;
 var decrementrow = utilities.decrementrow;
 var textchanged = utilities.textchanged;
 var makeunsaved = utilities.makeunsaved;
+var makesaved = utilities.makesaved;
 var saveFileObject = utilities.saveFileObject;
 var setCurText = utilities.setCurText;
 

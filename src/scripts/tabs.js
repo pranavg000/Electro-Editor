@@ -4,8 +4,15 @@ var listeners_list = ['keyup', 'keydown', 'cut', 'paste', 'input', 'click', 'scr
 var deletePromptOptions = {
     type: "warning",
     buttons: ["Yes", "No", "Cancel"],
-    message: "Do you want to Save the changes you made",
+    message: "Do you want to Save the changes you made?",
     detail: "Your changes will be lost if you don't save them."
+}
+
+var saveButChangedOptions = {
+    type: "warning",
+    buttons: ["Keep changes", "Reload"],
+    message: "There exists a newer version of this file on Disk",
+    detail: "Do you want to keep your changes or Reload from disk?"
 }
 
 function createlistners() {
@@ -67,11 +74,13 @@ function deletetab(fileKey) {
 }
 
 function reloadFile(fileKey){
+    makesaved(openFiles[fileKey]);
     let tempObj = new FileObject(fileKey, fileKey.replace(/^.*[\\\/]/, ''));
     openFiles[fileKey] = tempObj;
 
     if(curObj.fullFilePath.toString() === fileKey) curObj = openFiles[fileKey];
     setCurText(openFiles[fileKey]);
+    // console.log(openFiles)
 }
 
 function settab(fileKey) {
@@ -95,9 +104,19 @@ function settab(fileKey) {
 function createtab(fileKey, isSaved = true) {
 
     fs.watchFile(fileKey, (cur, prev) => {
-        if(!openFiles[fileKey].isChangedRecently)
-            reloadFile(fileKey);
-        openFiles[fileKey].isChangedRecently = false;
+        if(!openFiles[fileKey].isChangedRecently){
+            if(openFiles[fileKey].isSaved) reloadFile(fileKey);
+            else{
+                dialog.showMessageBox(win, saveButChangedOptions).then(response => {
+                    response = response.response;
+                    if (response === 1) {
+                        reloadFile(fileKey);
+                        makesaved(openFiles[fileKey]);
+                    }
+                })
+            }
+        }
+        else openFiles[fileKey].isChangedRecently = false;
     })
 
     let filetitle = openFiles[fileKey].fileName;
