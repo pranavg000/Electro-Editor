@@ -25,10 +25,10 @@
   /* =14px all type sizes are relative to the base size*/
   :root {
     --background: #FFFFFF;
-    --border-color: #50C68A;
+    --border-color: #252526;
     --text-color: #232323;
-    --sidebar-color: rgb(35, 37, 39);
-    --sidebar-text: #9f9fa0;
+    --sidebar-color: #252526;
+    --sidebar-text: #c1c3bb;
   }
   
   * {
@@ -41,7 +41,7 @@
     color: var(--text-color);
   }
   
-  #titles {
+  .sidebar {
     background: var(--sidebar-color);
     color: var(--sidebar-text);
     border-right: 1px solid var(--border-color);
@@ -50,6 +50,7 @@
     position: fixed;
     left: 0;
     top: 0;
+    padding-left: 10px;
     overflow-x: hidden;
   }
   
@@ -72,12 +73,13 @@ ul, #titles {
   list-style-type: none;
 }
 #titles {
+  font-family: Consolas, 'Courier New', monospace; 
+  line-height: 20px;
   margin: 0;
   padding: 0;
-  padding-left: 10px;
 }
 
-#titles li {
+.sidebar li {
   cursor: pointer;
 }
 
@@ -92,6 +94,7 @@ ul, #titles {
 
 .caret::before {
   content: "\25B6";
+  font-size: 10px;
   color: #c7c7ca;
   display: inline-block;
   margin-right: 6px;
@@ -327,4 +330,11 @@ ul, #titles {
   .cross-button {
     padding-left: 5px;
     padding-right: 5px;
+  }
+
+  .sidebar-heading {
+    font-weight: bold;
+    padding-top: 20px;
+    padding-bottom: 5px;
+    /* font-size: 15px; */
   }

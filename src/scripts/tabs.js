@@ -1,4 +1,12 @@
+const { dialog } = require('electron').remote;
+
 var listeners_list = ['keyup', 'keydown', 'cut', 'paste', 'input', 'click', 'scroll'];
+var deletePromptOptions = {
+    type: "warning",
+    buttons: ["Yes", "No", "Cancel"],
+    message: "Do you want to Save the changes you made",
+    detail: "Your changes will be lost if you don't save them."
+}
 
 function createlistners() {
     listeners_list.map(function app(e) {
