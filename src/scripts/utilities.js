@@ -55,7 +55,7 @@ function makeunsaved() {
         var newtitle = curObj.fileName.toString() + "*";
         titleofcurobj.innerHTML = newtitle;
         document.getElementById(curObj.fullFilePath.toString() + "button").innerHTML = newtitle + '<span onclick=deleteTabSafe("' + curObj.fullFilePath.toString() + '") style="float:right;">&#10005;</span>';
-        // console.log(newtitle);
+        console.log(newtitle);
         curObj.isSaved = false;
     }
 }
@@ -74,9 +74,10 @@ function makesaved(obj=curObj){
 }
 
 function saveFileObject(obj) {
-    makesaved(obj);
     addpiece();
     obj.saveTheFile();
+    console.log(obj)
+    makesaved(obj);
 }
 
 function setCurText(obj) {

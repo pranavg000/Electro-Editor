@@ -43,11 +43,9 @@ class FileObject {
 
 
     saveTheFile() {
-        // console.log(this.pieceTable);
-        // return;
+        console.log(this)
         if (!this.isSaved) {
             this.isChangedRecently = true;
-            this.isSaved = true;
             let fileDescriptor;
             var this_ = this;
             fs.open(this.fullFilePath.toString(), "w", function (err, fd) {
@@ -63,6 +61,7 @@ class FileObject {
                     // for(let i=piece.start;i<=piece.end;i++){
                     //     fullText.push(this_.pieceTable.buffers[piece.bufferIndex][i]);
                     // }
+                    
                     let length = piece.end - piece.start + 1;
                     fs.writeSync(fileDescriptor, Buffer(this_.pieceTable.buffers[piece.bufferIndex]), piece.start, length, posInFile);
                     posInFile += length;
