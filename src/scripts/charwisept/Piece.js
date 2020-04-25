@@ -10,11 +10,9 @@ class Piece {
 }
 
 class PieceRange {
-    constructor(first=null, last=null, pieceRangeType=0){
+    constructor(first=null, last=null){
         this.first = first;
         this.last = last;
-        this.pieceRangeType = pieceRangeType;
-
     }
 }
 

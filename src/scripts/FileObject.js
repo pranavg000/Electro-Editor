@@ -6,21 +6,10 @@ class FileObject {
         if (!clone) {
             this.isOpen = true;
             this.isSaved = true;
+            this.isChangedRecently = false;            
             this.fileName = Object(fileName);
-            let fileDatatemp = fs.readFileSync(fullFilePath, 'utf8').toString();
-            let fileData = ""
-            // fileData = fileDatatemp;
-            for (let i = 0; i < fileDatatemp.length; i++) {
-                if (fileDatatemp.charCodeAt(i) != 13)
-                    fileData += fileDatatemp.charAt(i);
-            }
-            // let fileData = fs.readFileSync(fullFilePath, 'utf8', function (err, data) {
-            //     myconfig = data.toString('utf8').replace(/^\uFEFF/, '');
-            // });
-            // for (let i = 0; i < fileData.length; i++)
-            //     console.log(fileData.charAt(i));
-            this.pieceTable = new PieceTable(fileData);
             this.fullFilePath = Object(fullFilePath);
+            this.pieceTable = new PieceTable(this.safeRead());
             this.piecestring = [];
             this.inptype = ""
             this.addpiecestart = -10;
@@ -30,8 +19,8 @@ class FileObject {
             this.isOpen = clone.isOpen;
             this.isSaved = clone.isSaved;
             this.fileName = Object(clone.fileName);
-            this.pieceTable = new PieceTable(clone.pieceTable.buffers[0]);
             this.fullFilePath = Object(clone.fullFilePath);
+            this.pieceTable = new PieceTable(clone.pieceTable.buffers[0]);
             this.piecestring = [];
             this.inptype = ""
             this.addpiecestart = -10;
@@ -42,13 +31,24 @@ class FileObject {
 
     }
 
+    safeRead(){
+        let fileDatatemp = fs.readFileSync(this.fullFilePath.toString(), 'utf8').toString();
+        let fileData = []
+        for (let i = 0; i < fileDatatemp.length; i++) {
+            if (fileDatatemp.charCodeAt(i) != 13)
+                fileData.push(fileDatatemp.charAt(i));
+        }
+        return fileData.join('');
+    }
+
+    reloadContent(){
+        this.pieceTable.reloadContent(this.safeRead(this.fullFilePath));
+    }
+
 
     saveTheFile() {
-        // console.log(this.pieceTable);
-        // return;
         if (!this.isSaved) {
-            // if(1){ // temp
-            this.isSaved = true;
+            this.isChangedRecently = true;
             let fileDescriptor;
             var this_ = this;
             fs.open(this.fullFilePath.toString(), "w", function (err, fd) {
@@ -64,6 +64,7 @@ class FileObject {
                     // for(let i=piece.start;i<=piece.end;i++){
                     //     fullText.push(this_.pieceTable.buffers[piece.bufferIndex][i]);
                     // }
+                    
                     let length = piece.end - piece.start + 1;
                     fs.writeSync(fileDescriptor, Buffer(this_.pieceTable.buffers[piece.bufferIndex]), piece.start, length, posInFile);
                     posInFile += length;
@@ -71,9 +72,7 @@ class FileObject {
                 }
                 fs.close(fileDescriptor, function (err) {
                     if (err) console.log(err);
-                    console.log("Saved")
-                    // console.log(fullText.join(''))
-                    // this_.pieceTable = new PieceTable(fullText.join(''));
+                    console.log("Saved");
                 });
             });
         }

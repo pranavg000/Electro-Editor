@@ -4,8 +4,15 @@ var listeners_list = ['keyup', 'keydown', 'cut', 'paste', 'input', 'click', 'scr
 var deletePromptOptions = {
     type: "warning",
     buttons: ["Yes", "No", "Cancel"],
-    message: "Do you want to Save the changes you made",
+    message: "Do you want to Save the changes you made?",
     detail: "Your changes will be lost if you don't save them."
+}
+
+var saveButChangedOptions = {
+    type: "warning",
+    buttons: ["Keep changes", "Reload"],
+    message: "There exists a newer version of this file on Disk",
+    detail: "Do you want to keep your changes or Reload from disk?"
 }
 
 function createlistners() {
@@ -47,6 +54,7 @@ function deleteTabSafe(fileKey) {
 }
 
 function deletetab(fileKey) {
+    fs.unwatchFile(fileKey);
     hide();
     if (curObj.fullFilePath == fileKey) {
         fixed = false;
@@ -65,6 +73,17 @@ function deletetab(fileKey) {
     delete openFiles[fileKey];
 }
 
+function reloadFile(fileKey){
+    makesaved(openFiles[fileKey]);
+    openFiles[fileKey].reloadContent();
+    // let tempObj = new FileObject(fileKey, fileKey.replace(/^.*[\\\/]/, ''));
+    // openFiles[fileKey] = tempObj;
+
+    // if(curObj.fullFilePath.toString() === fileKey) curObj = openFiles[fileKey];
+    setCurText(openFiles[fileKey]);
+    // console.log(openFiles)
+}
+
 function settab(fileKey) {
     if (openFiles[fileKey]) {
         if (curObj) {
@@ -76,6 +95,7 @@ function settab(fileKey) {
         curObj = openFiles[fileKey];
         mainContent = document.getElementById(fileKey + "textarea");
         rowcnt = document.getElementById(fileKey + "rowcnt");
+        //checkChanged()
         document.getElementById(fileKey + "tabcontent").style.display = "inline-block";
         document.getElementById(fileKey + "button").className += " active";
         createlistners();
@@ -83,6 +103,23 @@ function settab(fileKey) {
 }
 
 function createtab(fileKey, isSaved = true) {
+
+    fs.watchFile(fileKey, (cur, prev) => {
+        if(!openFiles[fileKey].isChangedRecently){
+            if(openFiles[fileKey].isSaved) reloadFile(fileKey);
+            else{
+                dialog.showMessageBox(win, saveButChangedOptions).then(response => {
+                    response = response.response;
+                    if (response === 1) {
+                        reloadFile(fileKey);
+                        makesaved(openFiles[fileKey]);
+                    }
+                })
+            }
+        }
+        else openFiles[fileKey].isChangedRecently = false;
+    })
+
     let filetitle = openFiles[fileKey].fileName;
     container.insertAdjacentHTML("beforeend", '<div id="' + fileKey + 'tabcontent" class="tabcontent"><div id="' + fileKey + 'rowcnt" class="rowcnt" readonly></div><textarea id="' + fileKey + 'textarea" class="content"> </textarea></div>');
     if (isSaved)

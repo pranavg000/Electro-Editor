@@ -11,6 +11,14 @@ class PieceTable {
         this.redoStack = new Array(); 
     }
 
+    reloadContent(fileData){
+        this.buffers.push(fileData);
+        let newPiece = new Piece(this.buffers.length-1, 0, fileData.length-1);
+        let newPieceRange = new PieceRange(this.pieceHead, this.pieceTail);
+        this.pieceHead = newPiece;
+        this.pieceTail = newPiece;
+        this.pushUndo(newPieceRange);
+    }
 
     findPiece(charNo){
         if(charNo === 1){
@@ -61,16 +69,28 @@ class PieceTable {
         else this.pieceTail = newPiece;
         piece.next = newPiece;
         newPiece.prev = piece;
-        if(insertInUndo)
-        this.pushUndo(new PieceRange(piece, newPiece.next, 1));
+        if(insertInUndo){
+            let pieceClone = this.clone(piece);
+            if(newPiece.next){
+                let nextPieceClone = this.clone(newPiece.next);
+                pieceClone.next = nextPieceClone;
+                nextPieceClone.prev = pieceClone;
+                this.pushUndo(new PieceRange(pieceClone, nextPieceClone));
+            }
+            else{
+                pieceClone.next = null;
+                this.pushUndo(new PieceRange(pieceClone, pieceClone));
+            }
+        }
         // this.pieces.splice(indexOfPiece+1,0,newPiece);
     }
 
     insertBeforePiece(newPiece, piece){
         newPiece.next = this.pieceHead;
         this.pieceHead = newPiece;
+        let pieceClone = this.clone(piece);
         piece.prev = newPiece;
-        this.pushUndo(new PieceRange(null, piece, 1));
+        this.pushUndo(new PieceRange(pieceClone, pieceClone));
         // this.pieces.splice(indexOfPiece,0,newPiece);
     }
 
@@ -78,56 +98,12 @@ class PieceTable {
         // index ke pehle insert karna hai
         let rightPiece = new Piece(pieceToSplit.bufferIndex, index, pieceToSplit.end);
         let pieceCopy = this.clone(pieceToSplit);
-        this.pushUndo(new PieceRange(pieceCopy, pieceCopy, 0));
+        this.pushUndo(new PieceRange(pieceCopy, pieceCopy));
         pieceToSplit.end = index-1;
         this.insertAfterPiece(newPiece, pieceToSplit, false);
         this.insertAfterPiece(rightPiece, newPiece, false);
         // this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
     }
-
-    // deleteText(startCharNo, endCharNo){
-    //     if(startCharNo === endCharNo) return;
-    //     let startPieceCoordinate = this.findPiece(startCharNo);
-    //     let endPieceCoordinate = this.findPiece(startCharNo);   
-    //     if(startPieceCoordinate[0] === endPieceCoordinate[0]){ 
-    //         let piece = endPieceCoordinate[0];
-    //         let pieceCopy = clone(piece);
-    //         this.pushUndo(new PieceRange(pieceCopy, pieceCopy, 0));
-    //         if(startPieceCoordinate[1]===0){
-    //             if(endPieceCoordinate[1]===2){
-    //                 this.pieceHead = piece.next;
-    //                 if(piece.next) piece.next.prev = null;
-    //                 return;
-    //             }
-    //             piece.start = endPieceCoordinate[2]+1;
-    //             return;
-    //         }  
-    //         if(endPieceCoordinate[1]===2){
-    //             piece.end = startPieceCoordinate[2]-1;
-    //             return;
-    //         }            
-    //         let newPiece = new Piece(piece.bufferIndex, endPieceCoordinate[2]+1, piece.end, piece, piece.next);
-    //         piece.end = startPieceCoordinate[2]-1;
-    //         this.insertAfterPiece(newPiece, piece);
-    //         piece.start = endPieceCoordinate[2]+1;
-    //         return;
-    //     }
-    //     if(startPieceCoordinate[1]===0){
-    //         this.pieceHead = endPieceCoordinate[0];
-    //         endPieceCoordinate[0].prev = null;
-    //     }
-    //     else{
-    //         startPieceCoordinate[0].next = endPieceCoordinate[0];
-    //         endPieceCoordinate[0].prev = startPieceCoordinate[0];
-    //     }
-
-    //     if(startPieceCoordinate[1]==1){
-    //         startPieceCoordinate[0].end = startPieceCoordinate[2]-1;
-    //     } 
-    //     if(endPieceCoordinate[1]==1){
-    //         endPieceCoordinate[0].start = endPieceCoordinate[2];
-    //     } 
-    // }
 
     deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo)  delete 
         console.log(startCharNo, endCharNo);
@@ -164,7 +140,7 @@ class PieceTable {
         else if(endPieceCoordinate[1]===2){
             endPiece = endPiece.next;
         }
-        let pieceRange = new PieceRange(piece, endPieceCoordinate[0], 0);
+        let pieceRange = new PieceRange(piece, endPieceCoordinate[0]);
         if(startPiece) startPiece.next = endPiece;
         else{
             this.pieceHead = endPiece;
@@ -176,74 +152,54 @@ class PieceTable {
         this.pushUndo(pieceRange);
     }
 
-    // constructFinalDocument(){
-    //     let fileDescriptor = fd;
-    //     fs.open("mynewfile1.txt", "w", function(err, fd){
-    //         if(err) console.log(err);
-    //         console.log("File opened")
-    //     });
-    //     let posInFile=0;
-    //     let piece = this.pieceHead;
-    //     while(piece){
-    //         let length = piece.end - piece.start + 1;
-    //         fs.write(Buffer(this.buffers[piece.bufferIndex]), piece.start, length, posInFile);
-    //         posInFile+=length;
-    //         piece = piece.next;
-    //     }
-    //     fs.close(fd);
-    // }
-
     
     applyUndoRedo(lastEdit){
         console.log("#");
         let newRange = new PieceRange();
-        if(!lastEdit.pieceRangeType){
-            let prevPiece = lastEdit.first.prev;
-            let nextPiece = lastEdit.last.next;
-            if(prevPiece){
-                newRange.first = prevPiece.next;
-                prevPiece.next = lastEdit.first;
-            }
-            else{
-                newRange.first = this.pieceHead;
-                this.pieceHead = lastEdit.first;
-            }
-
-            if(nextPiece){
-                newRange.last = nextPiece.prev;
-                nextPiece.prev = lastEdit.last;
-            }
-            else{
-                newRange.last = this.pieceTail;
-                this.pieceTail = lastEdit.last;
-            }
-            
+        let prevPiece = lastEdit.first.prev;
+        let nextPiece = lastEdit.last.next;
+        if(prevPiece){
+            newRange.first = prevPiece.next;
+            prevPiece.next = lastEdit.first;
         }
         else{
-            console.log(lastEdit);
-            if(lastEdit.first){
-                newRange.first = lastEdit.first.next;
-                lastEdit.first.next = lastEdit.last;
-            }
-            else{
-                newRange.first = this.pieceHead;
-                this.pieceHead = lastEdit.last;
-            }
-
-            if(lastEdit.last){
-                newRange.last = lastEdit.last.prev;
-                lastEdit.last.prev = lastEdit.first;
-            }
-            else{
-                newRange.last = this.pieceTail;
-                this.pieceTail = lastEdit.first;
-            }
+            newRange.first = this.pieceHead;
+            this.pieceHead = lastEdit.first;
         }
+
+        if(nextPiece){
+            newRange.last = nextPiece.prev;
+            nextPiece.prev = lastEdit.last;
+        }
+        else{
+            newRange.last = this.pieceTail;
+            this.pieceTail = lastEdit.last;
+        }  
+        
+        // else{
+        //     console.log(lastEdit);
+        //     if(lastEdit.first){
+        //         newRange.first = lastEdit.first.next;
+        //         lastEdit.first.next = lastEdit.last;
+        //     }
+        //     else{
+        //         newRange.first = this.pieceHead;
+        //         this.pieceHead = lastEdit.last;
+        //     }
+
+        //     if(lastEdit.last){
+        //         newRange.last = lastEdit.last.prev;
+        //         lastEdit.last.prev = lastEdit.first;
+        //     }
+        //     else{
+        //         newRange.last = this.pieceTail;
+        //         this.pieceTail = lastEdit.first;
+        //     }
+        // }
         return newRange;
         
     }
     applyUndo(){
-        console.log("#w");
         if(!this.undoStack.length) {
             console.log("Empty Undo Stack");
             return false;
@@ -276,12 +232,10 @@ class PieceTable {
     pushUndo(pieceRange){
         if(this.undoStack.length==10) this.undoStack.shift();
         this.undoStack.push(pieceRange);
-        console.log(this.undoStack.length);
     }
     pushRedo(pieceRange){
         if(this.redoStack.length==10) this.redoStack.shift();
         this.redoStack.push(pieceRange);
-        console.log(this.redoStack.length);
     }
 
     clone(piece){

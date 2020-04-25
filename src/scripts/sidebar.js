@@ -33,7 +33,7 @@ function handleFileSideBar(fullFilePath, fileName, parentUL) {
         var check = 0;
         // if (curObj) curObj.fileData = Buffer(mainContent.value);
         if (!openFiles[fullFilePath]) {
-            console.log(fullFilePath, fileName);
+            // console.log(fullFilePath, fileName);
             openFiles[fullFilePath] = new FileObject(fullFilePath, fileName);
             createtab(fullFilePath);
             // fileNFileObj[name].nodenumber = tabcontainer.childNodes.length - 1;
