@@ -75,10 +75,11 @@ function deletetab(fileKey) {
 
 function reloadFile(fileKey){
     makesaved(openFiles[fileKey]);
-    let tempObj = new FileObject(fileKey, fileKey.replace(/^.*[\\\/]/, ''));
-    openFiles[fileKey] = tempObj;
+    openFiles[fileKey].reloadContent();
+    // let tempObj = new FileObject(fileKey, fileKey.replace(/^.*[\\\/]/, ''));
+    // openFiles[fileKey] = tempObj;
 
-    if(curObj.fullFilePath.toString() === fileKey) curObj = openFiles[fileKey];
+    // if(curObj.fullFilePath.toString() === fileKey) curObj = openFiles[fileKey];
     setCurText(openFiles[fileKey]);
     // console.log(openFiles)
 }

@@ -1,5 +1,5 @@
 function keuplistner(e) {
-    console.log(rowcnt.childNodes.length);
+    // console.log(rowcnt.childNodes.length);
 }
 
 function keydownlistner(e) {

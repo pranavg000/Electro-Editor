@@ -41,9 +41,12 @@ class FileObject {
         return fileData.join('');
     }
 
+    reloadContent(){
+        this.pieceTable.reloadContent(this.safeRead(this.fullFilePath));
+    }
+
 
     saveTheFile() {
-        console.log(this)
         if (!this.isSaved) {
             this.isChangedRecently = true;
             let fileDescriptor;
