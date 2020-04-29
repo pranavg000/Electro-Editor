@@ -1,7 +1,7 @@
 Electro-Editor
 ======
 
-A custom text-editor made with electron-js that uses in-Memory Piece Table, supports Undo & Redo, Copy & Paste, with file backup functionality
+A custom text-editor made with electron-js that uses in-memory Piece Table, supports Undo & Redo, Copy & Paste, and has file backup functionality
 
 To run
 ============
