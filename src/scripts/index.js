@@ -99,10 +99,6 @@ ipcRenderer.on('FIND', function (event, arg) {
     if (curObj) {
         document.getElementById("findbar").style.display = "inline";
         document.getElementById("replacebar").style.display = "inline";
-
-        // const noti ={"title":"asv","body":"adsf"};
-        // const find = new window.Notification("abs",noti);
-        // const find1 =new window.HTMLDialogElement;
     }
 });
 

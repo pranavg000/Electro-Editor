@@ -41,11 +41,9 @@ class PieceTable {
     }
 
     addText(text, charNo){
-        // console.log(text.length, charNo);
         let newPiece = new Piece(this.buffers.length, 0, text.length - 1);
         this.buffers.push(text);
         let pieceCoordinate = this.findPiece(charNo);
-        // console.log(charNo, pieceCoordinate);
         switch (pieceCoordinate[1]) {
             case 0:
                 this.insertBeforePiece(newPiece, pieceCoordinate[0]);
@@ -82,16 +80,15 @@ class PieceTable {
                 this.pushUndo(new PieceRange(pieceClone, pieceClone));
             }
         }
-        // this.pieces.splice(indexOfPiece+1,0,newPiece);
     }
 
     insertBeforePiece(newPiece, piece){
+        // Only called when Inserted before head node
         newPiece.next = this.pieceHead;
         this.pieceHead = newPiece;
         let pieceClone = this.clone(piece);
         piece.prev = newPiece;
         this.pushUndo(new PieceRange(pieceClone, pieceClone));
-        // this.pieces.splice(indexOfPiece,0,newPiece);
     }
 
     insertInBetweenPiece(newPiece, pieceToSplit, index){
@@ -102,18 +99,17 @@ class PieceTable {
         pieceToSplit.end = index-1;
         this.insertAfterPiece(newPiece, pieceToSplit, false);
         this.insertAfterPiece(rightPiece, newPiece, false);
-        // this.pieces.splice(indexOfPieceToSplit+1, 0, [newPiece,rightPiece]);
     }
 
     deleteText(startCharNo, endCharNo){ // [startCharNo, endCharNo)  delete 
-        console.log(startCharNo, endCharNo);
         if(startCharNo > endCharNo) return;
         let startPieceCoordinate = this.findPiece(startCharNo);
         let endPieceCoordinate = this.findPiece(endCharNo);  
-        // console.log(startPieceCoordinate[0],startPieceCoordinate[1],startPieceCoordinate[2]);
-        // console.log(endPieceCoordinate[0],endPieceCoordinate[1],endPieceCoordinate[2]);
         let piece = startPieceCoordinate[0];
         let startPiece = startPieceCoordinate[0], endPiece = endPieceCoordinate[0];
+        // piece is the first node to be deleted
+        // startPiece is the node to the left of piece
+        // endPiece is the node to the right of rightmost deleted piece
         if(startPieceCoordinate[1]===0){
             startPiece = startPiece.prev;
         }
@@ -154,7 +150,6 @@ class PieceTable {
 
     
     applyUndoRedo(lastEdit){
-        console.log("#");
         let newRange = new PieceRange();
         let prevPiece = lastEdit.first.prev;
         let nextPiece = lastEdit.last.next;
@@ -175,27 +170,6 @@ class PieceTable {
             newRange.last = this.pieceTail;
             this.pieceTail = lastEdit.last;
         }  
-        
-        // else{
-        //     console.log(lastEdit);
-        //     if(lastEdit.first){
-        //         newRange.first = lastEdit.first.next;
-        //         lastEdit.first.next = lastEdit.last;
-        //     }
-        //     else{
-        //         newRange.first = this.pieceHead;
-        //         this.pieceHead = lastEdit.last;
-        //     }
-
-        //     if(lastEdit.last){
-        //         newRange.last = lastEdit.last.prev;
-        //         lastEdit.last.prev = lastEdit.first;
-        //     }
-        //     else{
-        //         newRange.last = this.pieceTail;
-        //         this.pieceTail = lastEdit.first;
-        //     }
-        // }
         return newRange;
         
     }
