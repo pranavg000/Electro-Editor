@@ -1,7 +1,7 @@
 Electro-Editor
 ======
 
-A custom text-editor made with electron-js that uses in-memory Piece Table.
+A custom text-editor made with ElectronJS and HTML that uses in-memory Piece Table.
 
 ## Features Implemented
 * Undo & Redo
