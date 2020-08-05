@@ -14,6 +14,12 @@ A custom text-editor made with ElectronJS and HTML that uses in-memory Piece Tab
 ## Todo
 * Git functionality
 
+## Screenshots
+
+![](screenshots/electon.png)
+
+![](screenshots/electon2.png)
+
 
 ## To run
 
