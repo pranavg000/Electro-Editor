@@ -8,12 +8,11 @@ A custom text-editor made with ElectronJS and HTML that uses in-memory Piece Tab
 * Copy & Paste
 * Find & Replace
 * File Backup
-* In-app Terminal
 * Automatic Reload
 
 ## Todo
 * Git functionality
-
+* In-app Terminal
 
 ## To run
 
